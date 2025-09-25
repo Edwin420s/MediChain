@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  did       String   @unique
+  role      UserRole
+  email     String?  @unique
+  name      String?
+  publicKey String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient   Patient?
+  doctor    Doctor?
+  admin     Admin?
+
+  @@map("users")
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  dateOfBirth DateTime?
+  bloodType   String?
+  allergies   String?
+  createdAt   DateTime @default(now())
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records   MedicalRecord[]
+  consents  Consent[]
+  auditLogs AuditLog[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  licenseNumber String?
+  specialization String?
+  departmentId  String?
+  isVerified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id])
+  consents  Consent[]
+  auditLogs AuditLog[]
+
+  @@map("doctors")
+}
+
+model Admin {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  department String?
+  level      AdminLevel @default(DEPARTMENT)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  doctors Doctor[]
+
+  @@map("departments")
+}
+
+model MedicalRecord {
+  id        String   @id @default(cuid())
+  patientId String
+  cid       String   // IPFS Content ID
+  recordHash String  // Hash stored on Hedera
+  recordType RecordType
+  title     String
+  description String?
+  fileSize  Int
+  mimeType  String?
+  hcsTxId   String?  // Hedera Consensus Service Transaction ID
+  createdAt DateTime @default(now())
+
+  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consents Consent[]
+
+  @@map("medical_records")
+}
+
+model Consent {
+  id          String   @id @default(cuid())
+  recordId    String
+  patientId   String
+  doctorId    String
+  purpose     String
+  isActive    Boolean  @default(true)
+  expiryDate  DateTime?
+  hcsTxId     String?  // Hedera transaction ID
+  createdAt   DateTime @default(now())
+
+  record  MedicalRecord @relation(fields: [recordId], references: [id])
+  patient Patient       @relation(fields: [patientId], references: [id])
+  doctor  Doctor        @relation(fields: [doctorId], references: [id])
+
+  @@map("consents")
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  action      AuditAction
+  actorId     String
+  targetId    String?
+  details     Json?
+  hcsTxId     String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum RecordType {
+  LAB_RESULT
+  PRESCRIPTION
+  IMAGING
+  DIAGNOSIS
+  TREATMENT
+  OTHER
+}
+
+enum AuditAction {
+  RECORD_CREATE
+  RECORD_VIEW
+  CONSENT_GRANT
+  CONSENT_REVOKE
+  USER_LOGIN
+  ACCESS_DENIED
+}
+
+enum AdminLevel {
+  DEPARTMENT
+  HOSPITAL
+  SYSTEM
+}
