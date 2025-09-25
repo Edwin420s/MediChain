@@ -1,69 +1,78 @@
-import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { FileText, User, Shield, Settings, LogOut } from 'lucide-react'
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  User, 
+  FileText, 
+  Share2, 
+  Shield, 
+  QrCode,
+  Users,
+  Settings
+} from 'lucide-react';
 
 const DashboardSidebar = ({ userRole }) => {
-  const location = useLocation()
+  const location = useLocation();
 
   const patientMenu = [
-    { icon: FileText, label: 'My Records', path: '/patient/records' },
-    { icon: User, label: 'Profile', path: '/patient/profile' },
-    { icon: Shield, label: 'Access Control', path: '/patient/access' },
-    { icon: Settings, label: 'Settings', path: '/patient/settings' },
-  ]
+    { name: 'Dashboard', href: '/patient', icon: User },
+    { name: 'My Records', href: '/patient/records', icon: FileText },
+    { name: 'Share Access', href: '/patient/share', icon: Share2 },
+    { name: 'Emergency QR', href: '/patient/emergency', icon: QrCode },
+    { name: 'Audit Log', href: '/patient/audit', icon: Shield },
+  ];
 
   const doctorMenu = [
-    { icon: FileText, label: 'Patients', path: '/doctor/patients' },
-    { icon: User, label: 'Profile', path: '/doctor/profile' },
-    { icon: Shield, label: 'Requests', path: '/doctor/requests' },
-    { icon: Settings, label: 'Settings', path: '/doctor/settings' },
-  ]
+    { name: 'Dashboard', href: '/doctor', icon: User },
+    { name: 'Patients', href: '/doctor/patients', icon: Users },
+    { name: 'Records', href: '/doctor/records', icon: FileText },
+    { name: 'Requests', href: '/doctor/requests', icon: Share2 },
+    { name: 'Audit Log', href: '/doctor/audit', icon: Shield },
+  ];
 
   const adminMenu = [
-    { icon: User, label: 'Doctors', path: '/admin/doctors' },
-    { icon: Shield, label: 'Departments', path: '/admin/departments' },
-    { icon: Settings, label: 'System Settings', path: '/admin/settings' },
-  ]
+    { name: 'Dashboard', href: '/admin', icon: User },
+    { name: 'Departments', href: '/admin/departments', icon: Users },
+    { name: 'Doctors', href: '/admin/doctors', icon: Users },
+    { name: 'Patients', href: '/admin/patients', icon: Users },
+    { name: 'System Settings', href: '/admin/settings', icon: Settings },
+  ];
 
-  const menu = userRole === 'patient' ? patientMenu : 
-               userRole === 'doctor' ? doctorMenu : adminMenu
+  const menu = userRole === 'PATIENT' ? patientMenu : 
+               userRole === 'DOCTOR' ? doctorMenu : adminMenu;
 
   return (
-    <div className="bg-white h-full shadow-lg w-64">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-semibold">MediChain</h2>
+    <div className="bg-gray-800 w-64 min-h-screen p-4">
+      <div className="flex items-center space-x-2 p-4">
+        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-lg">M</span>
+        </div>
+        <span className="text-white font-bold text-xl">MediChain</span>
       </div>
-      <nav className="p-4">
+      <nav className="mt-8">
         <ul className="space-y-2">
-          {menu.map((item, index) => {
-            const Icon = item.icon
-            const isActive = location.pathname === item.path
+          {menu.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href;
             return (
-              <li key={index}>
+              <li key={item.name}>
                 <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  to={item.href}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium ${
                     isActive
-                      ? 'bg-primary text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   }`}
                 >
                   <Icon size={20} />
-                  <span>{item.label}</span>
+                  <span>{item.name}</span>
                 </Link>
               </li>
-            )
+            );
           })}
         </ul>
       </nav>
-      <div className="absolute bottom-0 w-64 p-4 border-t">
-        <button className="flex items-center space-x-3 text-gray-700 hover:text-red-600 transition-colors">
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
     </div>
-  )
-}
+  );
+};
 
-export default DashboardSidebar
+export default DashboardSidebar;

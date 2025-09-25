@@ -1,29 +1,33 @@
-import jwt from 'jsonwebtoken'
-import prisma from '../config/db.js'
+import jwt from 'jsonwebtoken';
+import prisma from '../config/db.js';
 
 const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '')
-    
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
     if (!token) {
-      return res.status(401).json({ error: 'Access denied. No token provided.' })
+      return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      include: { patient: true, doctor: true, admin: true }
-    })
+      include: {
+        patient: true,
+        doctor: true,
+        admin: true
+      }
+    });
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid token.' })
+      return res.status(401).json({ error: 'Invalid token.' });
     }
 
-    req.user = user
-    next()
+    req.user = user;
+    next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token.' })
+    res.status(401).json({ error: 'Invalid token.' });
   }
-}
+};
 
-export default authMiddleware
+export default authMiddleware;

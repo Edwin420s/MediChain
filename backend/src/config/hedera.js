@@ -1,12 +1,10 @@
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk'
+import { Client, AccountId, PrivateKey } from "@hashgraph/sdk";
 
-const hederaConfig = {
-  operatorId: AccountId.fromString(process.env.HEDERA_OPERATOR_ID),
-  operatorKey: PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY),
-  network: process.env.HEDERA_NETWORK || 'testnet'
-}
+const client = Client.forTestnet(); // Use forMainnet in production
 
-const client = Client.forName(hederaConfig.network)
-client.setOperator(hederaConfig.operatorId, hederaConfig.operatorKey)
+const operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ID);
+const operatorKey = PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY);
 
-export { client, hederaConfig }
+client.setOperator(operatorId, operatorKey);
+
+export default client;

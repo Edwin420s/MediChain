@@ -1,87 +1,165 @@
-import React from 'react'
-import DashboardSidebar from '../components/DashboardSidebar'
-import { useAuth } from '../context/AuthContext'
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import DashboardSidebar from '../components/DashboardSidebar';
+import { 
+  Users,
+  UserCheck,
+  UserPlus,
+  Settings
+} from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [stats, setStats] = useState({});
+  const [pendingDoctors, setPendingDoctors] = useState([]);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchStats();
+    } else if (activeTab === 'doctors') {
+      fetchPendingDoctors();
+    }
+  }, [activeTab]);
+
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/admin/stats');
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchPendingDoctors = async () => {
+    try {
+      const response = await api.get('/admin/doctors/pending');
+      setPendingDoctors(response.data);
+    } catch (error) {
+      console.error('Error fetching pending doctors:', error);
+    }
+  };
+
+  const handleApproveDoctor = async (doctorId) => {
+    try {
+      await api.post(`/admin/doctors/${doctorId}/approve`);
+      setPendingDoctors(pendingDoctors.filter(doc => doc.id !== doctorId));
+    } catch (error) {
+      console.error('Error approving doctor:', error);
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <DashboardSidebar userRole="admin" />
-      <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600 mb-8">
-            System management and monitoring
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-2">Total Users</h3>
-              <p className="text-3xl font-bold text-primary">1,247</p>
-              <p className="text-gray-600">Registered</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-2">Pending Approvals</h3>
-              <p className="text-3xl font-bold text-secondary">12</p>
-              <p className="text-gray-600">Doctor applications</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-2">System Health</h3>
-              <p className="text-3xl font-bold text-accent">100%</p>
-              <p className="text-gray-600">Operational</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">New patient registered</p>
-                    <p className="text-gray-600 text-sm">2 minutes ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Doctor application submitted</p>
-                    <p className="text-gray-600 text-sm">1 hour ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Medical record uploaded</p>
-                    <p className="text-gray-600 text-sm">3 hours ago</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <button className="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                  Manage Doctors
-                </button>
-                <button className="w-full bg-secondary text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
-                  View System Logs
-                </button>
-                <button className="w-full bg-accent text-white py-2 rounded-lg hover:bg-purple-600 transition-colors">
-                  Department Settings
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="flex min-h-screen bg-gray-50">
+      <DashboardSidebar userRole={user?.role} />
+      <div className="flex-1 p-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">System Administration</p>
         </div>
+
+        {activeTab === 'dashboard' && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <Users size={24} />
+                  </div>
+                  <div className="ml-4">
+                    <h2 className="text-lg font-semibold">Total Patients</h2>
+                    <p className="text-2xl font-bold">{stats.totalPatients || 0}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-green-100 text-green-600">
+                    <UserCheck size={24} />
+                  </div>
+                  <div className="ml-4">
+                    <h2 className="text-lg font-semibold">Verified Doctors</h2>
+                    <p className="text-2xl font-bold">{stats.verifiedDoctors || 0}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <UserPlus size={24} />
+                  </div>
+                  <div className="ml-4">
+                    <h2 className="text-lg font-semibold">Pending Doctors</h2>
+                    <p className="text-2xl font-bold">{stats.pendingDoctors || 0}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <Settings size={24} />
+                  </div>
+                  <div className="ml-4">
+                    <h2 className="text-lg font-semibold">Departments</h2>
+                    <p className="text-2xl font-bold">{stats.departments || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">System Overview</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <span>Hedera Network</span>
+                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Operational</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <span>IPFS Storage</span>
+                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Operational</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <span>Database</span>
+                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Connected</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'doctors' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Pending Doctor Approvals</h2>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {pendingDoctors.map(doctor => (
+                  <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-semibold">{doctor.user.name}</h3>
+                      <p className="text-sm text-gray-600">License: {doctor.licenseNumber}</p>
+                      <p className="text-sm text-gray-600">Specialization: {doctor.specialization}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleApproveDoctor(doctor.id)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                ))}
+                {pendingDoctors.length === 0 && (
+                  <p className="text-center text-gray-600 py-4">No pending approvals</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminDashboard
+export default AdminDashboard;

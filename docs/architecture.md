@@ -1,58 +1,43 @@
 # MediChain Architecture
 
-## System Overview
+## Overview
+MediChain is a decentralized health record system built on Hedera Hashgraph. It provides secure, immutable, and patient-controlled medical records.
 
-MediChain is a decentralized healthcare records platform built on Hedera Hashgraph. The system provides secure, patient-owned medical records with immutable audit trails and granular access control.
+## System Architecture
+- **Frontend**: React.js application with Tailwind CSS
+- **Backend**: Node.js with Express.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Blockchain**: Hedera Hashgraph (HCS, HTS, Smart Contracts)
+- **Storage**: IPFS for file storage
 
 ## Components
+### Smart Contracts
+- `PatientRegistry.sol`: Manages patient identities
+- `DoctorRegistry.sol`: Manages doctor verification
+- `HealthRecord.sol`: Handles medical record anchoring
+- `AccessControl.sol`: Manages consent and access control
 
-### 1. Frontend (React.js)
-- **Patient Portal**: Record management and access control
-- **Doctor Portal**: Patient records viewing and management
-- **Admin Portal**: System and user management
+### Backend Services
+- **Auth Service**: Handles user authentication and JWT tokens
+- **Hedera Service**: Interacts with Hedera blockchain
+- **IPFS Service**: Manages file uploads and retrievals
+- **Email Service**: Sends notifications
+
+### Frontend Components
 - **Landing Page**: Marketing and information
-
-### 2. Backend (Node.js/Express)
-- **REST API**: JSON API for all operations
-- **Authentication**: JWT-based auth with Hedera DID
-- **Business Logic**: Record processing and access control
-- **Hedera Integration**: Blockchain operations
-
-### 3. Blockchain (Hedera Hashgraph)
-- **HCS (Hedera Consensus Service)**: Audit trails and event logging
-- **Smart Contracts**: Access control and verification
-- **HTS (Hedera Token Service)**: Role-based tokens
-
-### 4. Storage
-- **IPFS**: Decentralized file storage for medical records
-- **PostgreSQL**: Relational database for metadata
-- **Hedera**: Immutable metadata and audit logs
+- **Patient Dashboard**: Record management and sharing
+- **Doctor Dashboard**: Patient record access
+- **Admin Dashboard**: System management
 
 ## Data Flow
+1. Patient registers and creates a Hedera DID
+2. Medical records are encrypted and stored on IPFS
+3. Record metadata is anchored on Hedera HCS
+4. Patients grant consent to doctors via smart contracts
+5. Doctors access records with patient consent
 
-### Record Upload
-1. Patient uploads file through frontend
-2. File encrypted client-side
-3. Encrypted file stored on IPFS
-4. Metadata and hash anchored to Hedera HCS
-5. Database updated with record metadata
-
-### Access Granting
-1. Patient selects record and doctor
-2. Consent recorded on Hedera smart contract
-3. Access rule created in database
-4. Doctor notified of access grant
-
-### Record Access
-1. Doctor requests record access
-2. System verifies consent on Hedera
-3. IPFS file retrieved and decrypted
-4. Access logged to HCS audit trail
-
-## Security Features
-
-- **End-to-End Encryption**: Files encrypted before upload
-- **Hedera DID**: Decentralized identity management
-- **Immutable Audit Trail**: All actions logged to HCS
-- **Role-Based Access**: Granular permissions system
-- **HIPAA Compliance**: Designed for healthcare regulations
+## Security
+- End-to-end encryption for medical records
+- Hedera-based audit trails
+- JWT authentication
+- Role-based access control
