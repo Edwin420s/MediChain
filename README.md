@@ -17,7 +17,8 @@ A production-ready healthcare platform for secure, patient-owned medical records
 - Hedera (HCS, HTS, Smart Contracts) → audit trails, identities, access control
 - IPFS (web3.storage) → encrypted medical file storage
 
-`mermaid
+```
+mermaid
 flowchart LR
   A[Patient/Doctor/Admin] -->|HTTPS| B[Frontend (React)]
   B -->|REST /api/*| C[Backend (Express)]
@@ -25,12 +26,12 @@ flowchart LR
   C -->|Hedera SDK| E[Hedera (HCS/HTS/SC)]
   C -->|web3.storage| F[IPFS]
   C -->|Redis| G[(Redis Cache)]
-`
+```
 
 ## 📁 Project Structure
 
-`
-.
+```
+MediChain
 ├─ backend/
 │  ├─ src/
 │  │  ├─ config/
@@ -80,11 +81,12 @@ flowchart LR
 ├─ nginx.conf                     # reverse proxy, rate-limits
 ├─ LICENSE                        # MIT
 └─ package.json                   # workspace scripts
-`
+```
 
 ## 🛠 Tech Stack
 
-- Frontend: eact, ite, 	ailwindcss, xios, @hashgraph/sdk
+- Frontend: 
+eact, ite, 	ailwindcss, xios, @hashgraph/sdk
 - Backend: xpress, @prisma/client/prisma, helmet, jsonwebtoken, multer, cors, swagger-jsdoc, swagger-ui-express
 - Blockchain: Hedera Hashgraph (HCS/HTS/Smart Contracts)
 - Storage: IPFS (web3.storage)
@@ -96,11 +98,12 @@ flowchart LR
 ## 📦 Getting Started
 
 1) Clone & install
-`ash
+```
 git clone https://github.com/Edwin420s/MediChain
 cd medichain
+
 npm run install:all
-`
+```
 
 2) Configure environment
 - Copy ackend/.env.example → ackend/.env and fill:
@@ -113,23 +116,25 @@ npm run install:all
   - App: NODE_ENV, PORT (default 3001), CORS_ORIGIN, FRONTEND_URL, API_URL
 
 3) Database
-`ash
+```
 npm run db:setup
+```
 # optional
+```
 npm run db:seed
-`
+```
 
 4) Contracts (optional)
-`ash
+```
 npm run contracts:deploy
 # utilities
 npm run hedera:setup
-`
+```
 
 5) Run dev
-`ash
+```
 npm run dev
-`
+```
 - Backend: http://localhost:3001
 - Frontend: http://localhost:3000
 - Health: GET http://localhost:3001/health
@@ -158,10 +163,10 @@ npm run dev
 ## 🚀 Deployment
 
 ### Docker Compose
-`ash
+```
 npm run docker:build
 npm run docker:up
-`
+```
 Ports:
 - Backend: 3001:3001
 - Frontend: 3000:80
@@ -178,7 +183,7 @@ Nginx volumes (ensure exist):
 
 Nginx stub status for exporter: add in 
 ginx.conf (example)
-`
+```
 ginx
 server {
   listen 8080;
@@ -189,15 +194,15 @@ server {
     deny all;
   }
 }
-`
+```
 And ensure 
 ginx-exporter points to -nginx.scrape-uri=http://nginx:8080/stub_status.
 
 ### Manual
-`ash
+```
 cd frontend && npm run build
 cd ../backend && npm start
-`
+```
 
 ## 🔒 Security
 
@@ -228,7 +233,7 @@ cd ../backend && npm start
 
 ## 🤝 Contributing
 
-PRs welcome. Please follow code style and include tests where applicable. See docs/ for API/architecture/deployment details.
+PRs welcome. Please follow code style and include tests where applicable.
 
 ## 📄 License
 
@@ -236,4 +241,5 @@ MIT – see LICENSE.
 
 ## 🆘 Support
 
-Email support@medichain.com or join our Discord.
+Email   or join our Discord.
+
