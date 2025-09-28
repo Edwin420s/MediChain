@@ -18,7 +18,8 @@ A production-ready healthcare platform for secure, patient-owned medical records
 - Hedera (HCS, HTS, Smart Contracts) → audit trails, access control, identities
 - IPFS (web3.storage) → encrypted medical file storage
 
-`mermaid
+```
+mermaid
 flowchart LR
   A[Patient/Doctor/Admin] -->|HTTPS| B[Frontend (React)]
   B -->|REST /api/*| C[Backend (Express)]
@@ -26,11 +27,12 @@ flowchart LR
   C -->|Hedera SDK| E[Hedera (HCS/HTS/SC)]
   C -->|web3.storage| F[IPFS]
   C -->|Redis| G[(Redis Cache)]
-`
+```
 
 ## 🛠 Tech Stack
 
-- Frontend: eact, ite, 	ailwindcss, xios, @hashgraph/sdk
+- Frontend: 
+eact, ite, 	ailwindcss, xios, @hashgraph/sdk
 - Backend: xpress, @prisma/client/prisma, jsonwebtoken, multer, helmet, cors
 - Blockchain: Hedera Hashgraph (HCS/HTS/Smart Contracts)
 - Storage: IPFS via web3.storage
@@ -40,7 +42,7 @@ flowchart LR
 
 ## �� Project Structure
 
-`
+```
 .
 ├─ backend/                 # Express API, Prisma, services, routes
 │  ├─ src/
@@ -60,22 +62,22 @@ flowchart LR
 ├─ docker-compose.yml      # postgres, redis, backend, frontend, nginx, prometheus, grafana
 ├─ nginx.conf              # example nginx config (align with compose volumes)
 └─ package.json            # workspace scripts
-`
+```
 
 ## 📦 Installation
 
 1. **Clone the repository**
-`ash
+```
 git clone https://github.com/Edwin420s/MediChain
 cd medichain
-`
+```
 
 ## ⚙️ Setup
 
 1) Install dependencies
-`ash
+```
 npm run install:all
-`
+```
 
 2) Configure environment (copy and edit ackend/.env.example → ackend/.env)
 - Database: DATABASE_URL
@@ -187,3 +189,4 @@ MIT (see package.json license). If a LICENSE file is missing, one should be adde
 ## 🆘 Support
 
 Email support@medichain.com or join our Discord.
+
