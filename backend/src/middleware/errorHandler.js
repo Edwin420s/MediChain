@@ -1,17 +1,19 @@
 import { logger } from '../utils/logger.js';
 
 const errorHandler = (err, req, res, next) => {
+  let error = { ...err };
+  error.message = err.message;
+
+  // Log error
   logger.error('Error occurred:', {
     message: err.message,
     stack: err.stack,
     url: req.url,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    userId: req.user?.id
   });
-
-  // Default error
-  let error = { ...err };
-  error.message = err.message;
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -42,10 +44,47 @@ const errorHandler = (err, req, res, next) => {
     error = { message, statusCode: 401 };
   }
 
+  // File upload errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    const message = 'File size too large';
+    error = { message, statusCode: 400 };
+  }
+
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    const message = 'Unexpected field in file upload';
+    error = { message, statusCode: 400 };
+  }
+
+  // Hedera errors
+  if (err.message?.includes('Hedera')) {
+    const message = 'Blockchain service temporarily unavailable';
+    error = { message, statusCode: 503 };
+  }
+
+  // IPFS errors
+  if (err.message?.includes('IPFS')) {
+    const message = 'File storage service temporarily unavailable';
+    error = { message, statusCode: 503 };
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
-    error: error.message || 'Server Error'
+    error: error.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
   });
 };
 
+// Async error handler wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// 404 handler
+const notFound = (req, res, next) => {
+  const error = new Error(`Not found - ${req.originalUrl}`);
+  res.status(404);
+  next(error);
+};
+
+export { errorHandler, asyncHandler, notFound };
 export default errorHandler;

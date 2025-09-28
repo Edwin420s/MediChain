@@ -5,78 +5,195 @@ import "./utils/Strings.sol";
 
 contract AccessControl {
     using Strings for string;
-
-    struct Access {
-        string recordId;
-        string patientDid;
-        string doctorDid;
-        uint256 grantedAt;
-        uint256 expiresAt;
-        bool isActive;
+    
+    struct Role {
+        string name;
+        string description;
+        bytes32[] permissions;
+        mapping(address => bool) members;
+        address[] memberList;
     }
-
+    
+    struct Permission {
+        string resource;
+        string action;
+        bool granted;
+    }
+    
     address public admin;
-    mapping(string => Access) public accesses;
-    mapping(string => string[]) public patientAccesses;
-
-    event AccessGranted(string indexed recordId, string patientDid, string doctorDid, uint256 expiresAt);
-    event AccessRevoked(string indexed recordId, string patientDid, string doctorDid);
-
+    mapping(string => Role) public roles;
+    mapping(bytes32 => bool) public permissions;
+    mapping(address => string) public userRoles;
+    
+    event RoleCreated(string indexed roleName, string description);
+    event RoleGranted(string indexed roleName, address indexed member);
+    event RoleRevoked(string indexed roleName, address indexed member);
+    event PermissionGranted(string resource, string action, string roleName);
+    event PermissionRevoked(string resource, string action, string roleName);
+    
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin can perform this action");
         _;
     }
-
+    
+    modifier onlyRole(string memory roleName) {
+        require(
+            roles[roleName].members[msg.sender],
+            "Caller does not have required role"
+        );
+        _;
+    }
+    
     constructor() {
         admin = msg.sender;
+        
+        // Create default roles
+        _createRole("PATIENT", "Medical record owners");
+        _createRole("DOCTOR", "Medical professionals");
+        _createRole("ADMIN", "System administrators");
+        _createRole("SUPER_ADMIN", "Super administrators");
+        
+        // Grant admin role to deployer
+        _grantRole("SUPER_ADMIN", msg.sender);
     }
-
-    function grantAccess(
-        string memory recordId,
-        string memory patientDid,
-        string memory doctorDid,
-        uint256 duration
+    
+    function createRole(string memory roleName, string memory description) 
+        external 
+        onlyAdmin 
+    {
+        _createRole(roleName, description);
+    }
+    
+    function _createRole(string memory roleName, string memory description) 
+        internal 
+    {
+        require(!roles[roleName].members[admin], "Role already exists");
+        
+        roles[roleName].name = roleName;
+        roles[roleName].description = description;
+        
+        emit RoleCreated(roleName, description);
+    }
+    
+    function grantRole(string memory roleName, address member) 
+        external 
+        onlyAdmin 
+    {
+        _grantRole(roleName, member);
+    }
+    
+    function _grantRole(string memory roleName, address member) internal {
+        require(roles[roleName].members[admin], "Role does not exist");
+        require(!roles[roleName].members[member], "Member already has role");
+        
+        roles[roleName].members[member] = true;
+        roles[roleName].memberList.push(member);
+        userRoles[member] = roleName;
+        
+        emit RoleGranted(roleName, member);
+    }
+    
+    function revokeRole(string memory roleName, address member) 
+        external 
+        onlyAdmin 
+    {
+        require(roles[roleName].members[member], "Member does not have role");
+        
+        roles[roleName].members[member] = false;
+        
+        // Remove from memberList
+        for (uint i = 0; i < roles[roleName].memberList.length; i++) {
+            if (roles[roleName].memberList[i] == member) {
+                roles[roleName].memberList[i] = roles[roleName].memberList[roles[roleName].memberList.length - 1];
+                roles[roleName].memberList.pop();
+                break;
+            }
+        }
+        
+        delete userRoles[member];
+        
+        emit RoleRevoked(roleName, member);
+    }
+    
+    function addPermission(
+        string memory roleName, 
+        string memory resource, 
+        string memory action
     ) external onlyAdmin {
-        require(!accesses[recordId].isActive, "Access already granted for this record");
-
-        uint256 expiresAt = block.timestamp + duration;
+        bytes32 permissionHash = keccak256(abi.encodePacked(resource, action));
         
-        accesses[recordId] = Access({
-            recordId: recordId,
-            patientDid: patientDid,
-            doctorDid: doctorDid,
-            grantedAt: block.timestamp,
-            expiresAt: expiresAt,
-            isActive: true
-        });
-
-        patientAccesses[patientDid].push(recordId);
-
-        emit AccessGranted(recordId, patientDid, doctorDid, expiresAt);
-    }
-
-    function revokeAccess(string memory recordId) external onlyAdmin {
-        require(accesses[recordId].isActive, "Access not active");
-
-        accesses[recordId].isActive = false;
-
-        emit AccessRevoked(recordId, accesses[recordId].patientDid, accesses[recordId].doctorDid);
-    }
-
-    function hasAccess(string memory recordId, string memory doctorDid) external view returns (bool) {
-        Access memory access = accesses[recordId];
+        require(!permissions[permissionHash], "Permission already exists");
         
-        if (!access.isActive) return false;
-        if (block.timestamp > access.expiresAt) return false;
+        permissions[permissionHash] = true;
+        roles[roleName].permissions.push(permissionHash);
         
-        return Strings.compare(access.doctorDid, doctorDid);
+        emit PermissionGranted(resource, action, roleName);
     }
-
-    function getAccess(string memory recordId) external view returns (Access memory) {
-        return accesses[recordId];
+    
+    function removePermission(
+        string memory roleName, 
+        string memory resource, 
+        string memory action
+    ) external onlyAdmin {
+        bytes32 permissionHash = keccak256(abi.encodePacked(resource, action));
+        
+        require(permissions[permissionHash], "Permission does not exist");
+        
+        permissions[permissionHash] = false;
+        
+        // Remove from role's permissions
+        bytes32[] storage rolePerms = roles[roleName].permissions;
+        for (uint i = 0; i < rolePerms.length; i++) {
+            if (rolePerms[i] == permissionHash) {
+                rolePerms[i] = rolePerms[rolePerms.length - 1];
+                rolePerms.pop();
+                break;
+            }
+        }
+        
+        emit PermissionRevoked(resource, action, roleName);
     }
-
-    function getPatientAccesses(string memory patientDid) external view returns (string[] memory) {
-        return patientAccesses[patientDid];
+    
+    function hasPermission(
+        address user, 
+        string memory resource, 
+        string memory action
+    ) external view returns (bool) {
+        string memory roleName = userRoles[user];
+        
+        if (Strings.compare(roleName, "")) {
+            return false;
+        }
+        
+        bytes32 permissionHash = keccak256(abi.encodePacked(resource, action));
+        bytes32[] storage rolePerms = roles[roleName].permissions;
+        
+        for (uint i = 0; i < rolePerms.length; i++) {
+            if (rolePerms[i] == permissionHash) {
+                return permissions[permissionHash];
+            }
+        }
+        
+        return false;
+    }
+    
+    function getUserRole(address user) external view returns (string memory) {
+        return userRoles[user];
+    }
+    
+    function getRoleMembers(string memory roleName) 
+        external 
+        view 
+        returns (address[] memory) 
+    {
+        return roles[roleName].memberList;
+    }
+    
+    function getRolePermissions(string memory roleName) 
+        external 
+        view 
+        returns (bytes32[] memory) 
+    {
+        return roles[roleName].permissions;
     }
 }

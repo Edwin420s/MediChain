@@ -1,35 +1,42 @@
 import express from 'express';
+import departmentController from '../controllers/departmentController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import roleMiddleware from '../middleware/roleMiddleware.js';
-import departmentController from '../controllers/departmentController.js';
+import { validateDepartmentCreate } from '../utils/validator.js';
 
 const router = express.Router();
 
-// Apply auth middleware to all routes
+// Apply authentication to all routes
 router.use(authMiddleware);
 
-// Get department doctors
-router.get('/doctors', 
-  roleMiddleware(['ADMIN']), 
-  departmentController.getDepartmentDoctors
+// Get all departments (accessible to all authenticated users)
+router.get('/', departmentController.getDepartments);
+
+// Department management (admin only)
+router.post('/',
+  roleMiddleware(['ADMIN', 'SUPER_ADMIN']),
+  validateDepartmentCreate,
+  departmentController.createDepartment
 );
 
-// Approve doctor
-router.post('/doctors/:doctorId/approve',
-  roleMiddleware(['ADMIN']),
-  departmentController.approveDoctor
+router.put('/:departmentId',
+  roleMiddleware(['ADMIN', 'SUPER_ADMIN']),
+  departmentController.updateDepartment
 );
 
-// Reject doctor
-router.post('/doctors/:doctorId/reject',
-  roleMiddleware(['ADMIN']),
-  departmentController.rejectDoctor
+router.delete('/:departmentId',
+  roleMiddleware(['SUPER_ADMIN']),
+  departmentController.deleteDepartment
 );
 
-// Get department stats
-router.get('/stats',
-  roleMiddleware(['ADMIN']),
+// Department statistics
+router.get('/:departmentId/stats',
   departmentController.getDepartmentStats
+);
+
+// Department doctors
+router.get('/:departmentId/doctors',
+  departmentController.getDepartmentDoctors
 );
 
 export default router;
