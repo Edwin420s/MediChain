@@ -65,18 +65,24 @@ export const patientAPI = {
   grantAccess: (data) => api.post('/patients/consent', data),
   revokeAccess: (consentId) => api.delete(`/patients/consent/${consentId}`),
   getConsents: () => api.get('/patients/consents'),
-  getAuditLogs: () => api.get('/patients/audit'),
+  getAuditLogs: () => api.get('/patients/audit-logs'),
   generateEmergencyQR: () => api.post('/patients/emergency-qr'),
 };
 
 export const doctorAPI = {
   getPatients: () => api.get('/doctors/patients'),
+  getPatientProfile: (patientDid) => api.get(`/doctors/patients/${patientDid}`),
   getPatientRecords: (patientDid) => api.get(`/doctors/patients/${patientDid}/records`),
   requestAccess: (data) => api.post('/doctors/access-requests', data),
+  getAccessRequests: () => api.get('/doctors/access-requests'),
   uploadRecord: (formData) => api.post('/doctors/records', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  getAccessRequests: () => api.get('/doctors/access-requests'),
+  getConsents: () => api.get('/doctors/consents'),
+  getAuditLogs: () => api.get('/doctors/audit-logs'),
+  getDashboard: () => api.get('/doctors/dashboard'),
+  getProfile: () => api.get('/doctors/profile'),
+  updateProfile: (data) => api.put('/doctors/profile', data),
 };
 
 export const adminAPI = {

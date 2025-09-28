@@ -6,6 +6,9 @@ import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import net from 'net';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // Load environment variables
 config();
@@ -43,17 +46,13 @@ class MediChainServer {
 
   async initializeServices() {
     try {
-      // Initialize Hedera
       hederaConfig.initialize();
       logger.info('Hedera service initialized');
 
-      // Test database connection
-      await prisma.$connect();
+      await prisma.();
       logger.info('Database connected successfully');
 
-      // Perform health checks
       await this.healthCheck();
-
     } catch (error) {
       logger.error('Service initialization failed:', error);
       process.exit(1);
@@ -61,20 +60,18 @@ class MediChainServer {
   }
 
   initializeMiddleware() {
-    // Security middleware
     this.app.use(helmet({
-      crossOriginResourcePolicy: { policy: "cross-origin" },
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "https:"],
+          imgSrc: ["'self'", 'data:', 'https:'],
         },
       },
     }));
 
-    // CORS configuration
     this.app.use(cors({
       origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
       credentials: true,
@@ -82,27 +79,19 @@ class MediChainServer {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     }));
 
-    // Rate limiting
     const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: process.env.NODE_ENV === 'production' ? 100 : 1000, // requests per window
-      message: {
-        success: false,
-        error: 'Too many requests from this IP, please try again later.'
-      },
+      windowMs: 15 * 60 * 1000,
+      max: this.env === 'production' ? 100 : 1000,
+      message: { success: false, error: 'Too many requests from this IP, please try again later.' },
       standardHeaders: true,
       legacyHeaders: false,
     });
     this.app.use(limiter);
 
-    // Body parsing middleware
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-    // Compression
     this.app.use(compression());
 
-    // Request logging
     this.app.use((req, res, next) => {
       const start = Date.now();
       res.on('finish', () => {
@@ -118,21 +107,16 @@ class MediChainServer {
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
         environment: this.env,
-        services: {}
+        services: {},
       };
-
       try {
-        // Database health check
-        await prisma.$queryRaw`SELECT 1`;
+        await prisma.SELECT 1;
         healthcheck.services.database = 'healthy';
 
-        // Hedera health check
         const hederaHealth = await hederaConfig.healthCheck();
         healthcheck.services.hedera = hederaHealth.healthy ? 'healthy' : 'unhealthy';
 
-        // Redis health check (if implemented)
-        healthcheck.services.redis = 'healthy';
-
+        healthcheck.services.redis = await this.checkRedisHealth();
         res.status(200).json(healthcheck);
       } catch (error) {
         healthcheck.services.database = 'unhealthy';
@@ -141,20 +125,15 @@ class MediChainServer {
       }
     });
 
-    // Metrics endpoint for monitoring
+    // Metrics endpoint
     this.app.get('/metrics', async (req, res) => {
-      if (process.env.NODE_ENV !== 'production') {
-        return res.status(404).json({ error: 'Not found' });
-      }
-
+      if (this.env !== 'production') return res.status(404).json({ error: 'Not found' });
       try {
         const metrics = {
           timestamp: new Date().toISOString(),
           memory: process.memoryUsage(),
           uptime: process.uptime(),
-          database: {
-            connections: await this.getDatabaseMetrics()
-          }
+          database: { connections: await this.getDatabaseMetrics() },
         };
         res.json(metrics);
       } catch (error) {
@@ -162,10 +141,28 @@ class MediChainServer {
         res.status(500).json({ error: 'Metrics unavailable' });
       }
     });
+
+    // Swagger (OpenAPI)
+    const swaggerSpec = swaggerJsdoc({
+      definition: {
+        openapi: '3.0.0',
+        info: {
+          title: 'MediChain API',
+          version: '1.0.0',
+          description: 'Decentralized Health Records on Hedera',
+        },
+        servers: [
+          { url: process.env.API_URL ? ${process.env.API_URL}/api : 'http://localhost:3001/api' },
+        ],
+      },
+      apis: [
+        join(__dirname, './routes/*.js'),
+      ],
+    });
+    this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   }
 
   initializeRoutes() {
-    // API routes
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/patients', patientRoutes);
     this.app.use('/api/doctors', doctorRoutes);
@@ -173,21 +170,16 @@ class MediChainServer {
     this.app.use('/api/departments', departmentRoutes);
     this.app.use('/api/hedera', hederaRoutes);
 
-    // API documentation
-    this.app.use('/api/docs', express.static(join(__dirname, '../docs')));
-
-    // Root endpoint
     this.app.get('/', (req, res) => {
       res.json({
         message: 'MediChain API Server',
         version: '1.0.0',
         environment: this.env,
         timestamp: new Date().toISOString(),
-        documentation: '/api/docs'
+        documentation: '/api/docs',
       });
     });
 
-    // API info endpoint
     this.app.get('/api', (req, res) => {
       res.json({
         name: 'MediChain API',
@@ -199,25 +191,20 @@ class MediChainServer {
           doctors: '/api/doctors',
           admin: '/api/admin',
           departments: '/api/departments',
-          hedera: '/api/hedera'
-        }
+          hedera: '/api/hedera',
+        },
       });
     });
   }
 
   initializeErrorHandling() {
-    // 404 handler
     this.app.use(notFound);
-
-    // Global error handler
     this.app.use(errorHandler);
 
-    // Process error handlers
     process.on('unhandledRejection', (err) => {
       logger.error('Unhandled Promise Rejection:', err);
       process.exit(1);
     });
-
     process.on('uncaughtException', (err) => {
       logger.error('Uncaught Exception:', err);
       process.exit(1);
@@ -226,14 +213,14 @@ class MediChainServer {
 
   async getDatabaseMetrics() {
     try {
-      const metrics = await prisma.$queryRaw`
+      const metrics = await prisma.
         SELECT 
           count(*) as total_connections,
           count(*) FILTER (WHERE state = 'active') as active_connections,
           count(*) FILTER (WHERE state = 'idle') as idle_connections
         FROM pg_stat_activity 
-        WHERE datname = ${process.env.DB_NAME}
-      `;
+        WHERE datname = 
+      ;
       return metrics[0];
     } catch (error) {
       logger.error('Database metrics error:', error);
@@ -243,16 +230,13 @@ class MediChainServer {
 
   async healthCheck() {
     const checks = [];
-
-    // Database health check
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      await prisma.SELECT 1;
       checks.push({ service: 'database', status: 'healthy' });
     } catch (error) {
       checks.push({ service: 'database', status: 'unhealthy', error: error.message });
     }
 
-    // Hedera health check
     try {
       const hederaHealth = await hederaConfig.healthCheck();
       checks.push({ service: 'hedera', status: hederaHealth.healthy ? 'healthy' : 'unhealthy' });
@@ -260,47 +244,70 @@ class MediChainServer {
       checks.push({ service: 'hedera', status: 'unhealthy', error: error.message });
     }
 
+    try {
+      const redisStatus = await this.checkRedisHealth();
+      checks.push({ service: 'redis', status: redisStatus });
+    } catch (error) {
+      checks.push({ service: 'redis', status: 'unhealthy', error: error.message });
+    }
+
     return checks;
+  }
+
+  checkRedisHealth() {
+    return new Promise((resolve) => {
+      try {
+        const url = new URL(process.env.REDIS_URL || 'redis://localhost:6379');
+        const host = url.hostname || 'localhost';
+        const port = parseInt(url.port || '6379', 10);
+        const socket = new net.Socket();
+        let finished = false;
+        const cleanup = (status) => {
+          if (finished) return;
+          finished = true;
+          try { socket.destroy(); } catch (_) {}
+          resolve(status);
+        };
+        socket.setTimeout(2000);
+        socket.once('error', () => cleanup('unhealthy'));
+        socket.once('timeout', () => cleanup('unhealthy'));
+        socket.connect(port, host, () => cleanup('healthy'));
+      } catch (_) {
+        resolve('unhealthy');
+      }
+    });
   }
 
   start() {
     this.server = this.app.listen(this.port, () => {
-      logger.info(`MediChain Server running in ${this.env} mode on port ${this.port}`);
-      logger.info(`Health check available at http://localhost:${this.port}/health`);
-      logger.info(`API documentation available at http://localhost:${this.port}/api/docs`);
+      logger.info(MediChain Server running in  mode on port );
+      logger.info(Health check available at http://localhost:/health);
+      logger.info(API documentation available at http://localhost:/api/docs);
     });
 
-    // Graceful shutdown
     const gracefulShutdown = async (signal) => {
-      logger.info(`Received ${signal}, starting graceful shutdown...`);
-      
+      logger.info(Received , starting graceful shutdown...);
       this.server.close(async () => {
         logger.info('HTTP server closed.');
-        
         try {
-          await prisma.$disconnect();
+          await prisma.();
           logger.info('Database connections closed.');
         } catch (error) {
           logger.error('Error closing database connections:', error);
         }
-        
         logger.info('Graceful shutdown completed.');
         process.exit(0);
       });
-
-      // Force close after 30 seconds
       setTimeout(() => {
         logger.error('Forcing shutdown after timeout...');
         process.exit(1);
       }, 30000);
     };
-
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   }
 }
 
-// Create and start server
 const server = new MediChainServer();
 server.start();
 

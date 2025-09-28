@@ -37,8 +37,6 @@ contract DoctorRegistry {
             "Only verified doctors can perform this action"
         );
         _;
-    }
-
     constructor() {
         admin = msg.sender;
     }
@@ -49,7 +47,8 @@ contract DoctorRegistry {
         string memory specialization,
         string memory department
     ) external {
-        require(!doctors[doctorDid].createdAt > 0, "Doctor already registered");
+        // Not registered if createdAt == 0
+        require(doctors[doctorDid].createdAt == 0, "Doctor already registered");
         require(!usedLicenses[licenseNumber], "License number already in use");
         require(!doctorDid.isEmpty(), "DID cannot be empty");
 
@@ -57,7 +56,6 @@ contract DoctorRegistry {
             doctorAddress: msg.sender,
             did: doctorDid,
             licenseNumber: licenseNumber,
-            specialization: specialization,
             department: department,
             isVerified: false,
             verifiedAt: 0,

@@ -1,25 +1,23 @@
 # MediChain – Decentralized Health Records on Hedera
 
-A production-ready healthcare platform for secure, patient-owned medical records built on Hedera Hashgraph with IPFS-backed storage.
+A production-ready healthcare platform for secure, patient-owned medical records, built on Hedera Hashgraph and IPFS, with a modern React + Node/Express stack. It provides end-to-end encrypted storage, consent-based access control, immutable audit trails, and production-grade deployment/monitoring.
 
-## 🚀 Features
+## 🚀 Summary
 
-- **Patient-Owned Data** – Users control access to their health records
-- **Hedera Audit Trails** – Immutable logging via HCS and smart contracts
-- **IPFS Storage** – Encrypted medical files stored with content addressing
-- **Role-Based Access** – Patients, Doctors, Admins with consent-based controls
-- **Emergency Access** – Generatable QR codes for critical information
-- **Modern UX** – Responsive React app with Tailwind CSS
+- **Purpose**: Patient-owned health records with granular, consent-based sharing.
+- **Core**: React frontend, Express/Prisma backend, Hedera (HCS/HTS/SC), IPFS (web3.storage), PostgreSQL, Redis.
+- **Security**: JWT + RBAC, Helmet/CSP, rate limiting, on-chain audit, E2E encryption before IPFS.
+- **Ops**: Docker Compose, Nginx proxy/SSL, Prometheus + Grafana, health + metrics endpoints, graceful shutdown.
+- **Smart Contracts**: Patient/Doctor registries, HealthRecord metadata anchoring, AccessControl permissions.
 
 ## 🏗 Architecture
 
-- Frontend (React + Vite + Tailwind) → user interface and DID flows
+- Frontend (React + Vite + Tailwind) → UI, auth, DID/flows
 - Backend (Node.js + Express + Prisma) → API, auth, records, Hedera/IPFS orchestration
-- Hedera (HCS, HTS, Smart Contracts) → audit trails, access control, identities
+- Hedera (HCS, HTS, Smart Contracts) → audit trails, identities, access control
 - IPFS (web3.storage) → encrypted medical file storage
 
-```
-mermaid
+`mermaid
 flowchart LR
   A[Patient/Doctor/Admin] -->|HTTPS| B[Frontend (React)]
   B -->|REST /api/*| C[Backend (Express)]
@@ -27,66 +25,92 @@ flowchart LR
   C -->|Hedera SDK| E[Hedera (HCS/HTS/SC)]
   C -->|web3.storage| F[IPFS]
   C -->|Redis| G[(Redis Cache)]
-```
+`
+
+## 📁 Project Structure
+
+`
+.
+├─ backend/
+│  ├─ src/
+│  │  ├─ config/
+│  │  │  ├─ db.js                 # Prisma client + logging helpers
+│  │  │  ├─ hedera.js             # Hedera client init + health
+│  │  │  └─ ipfs.js               # web3.storage IPFS client
+│  │  ├─ controllers/             # auth, patient, doctor, admin, hedera, dept
+│  │  ├─ middleware/              # auth, role, rateLimit, error handlers
+│  │  ├─ routes/                  # authRoutes.js, patientRoutes.js, ...
+│  │  ├─ utils/                   # logger, validators, helpers
+│  │  └─ index.js                 # server entry, health/metrics, swagger
+│  ├─ prisma/
+│  │  └─ schema.prisma            # DB schema (users, records, consents, logs)
+│  ├─ Dockerfile(.prod)
+│  ├─ package.json
+│  └─ .env.example
+├─ frontend/
+│  ├─ src/
+│  │  ├─ pages/                   # dashboards & pages
+│  │  ├─ components/              # UI components
+│  │  ├─ context/                 # Auth/Theme/User contexts
+│  │  ├─ services/                # api.js (Axios), hedera.js, ipfs.js
+│  │  ├─ utils/                   # encryption, validators
+│  │  ├─ router.jsx               # routes + guards
+│  │  └─ App.jsx / main.jsx
+│  └─ package.json
+├─ contracts/
+│  ├─ PatientRegistry.sol
+│  ├─ DoctorRegistry.sol
+│  ├─ HealthRecord.sol
+│  ├─ AccessControl.sol
+│  └─ utils/Strings.sol
+├─ scripts/
+│  ├─ deployContracts.js          # deploy contracts
+│  ├─ setupHedera.js              # setup utilities
+│  ├─ init-db.sql                 # DB init
+│  └─ seedDatabase.js             # seeding
+├─ docs/
+│  ├─ architecture.md
+│  ├─ api.md
+│  └─ deployment.md
+├─ monitoring/
+│  ├─ prometheus.yml              # scrape backend metrics
+│  └─ grafana/                    # dashboards & provisioning
+├─ kubernetes/                    # (scaffolding if used)
+├─ docker-compose.yml             # postgres, redis, backend, frontend, nginx, prometheus, grafana, exporters
+├─ nginx.conf                     # reverse proxy, rate-limits
+├─ LICENSE                        # MIT
+└─ package.json                   # workspace scripts
+`
 
 ## 🛠 Tech Stack
 
-- Frontend: 
-eact, ite, 	ailwindcss, xios, @hashgraph/sdk
-- Backend: xpress, @prisma/client/prisma, jsonwebtoken, multer, helmet, cors
+- Frontend: eact, ite, 	ailwindcss, xios, @hashgraph/sdk
+- Backend: xpress, @prisma/client/prisma, helmet, jsonwebtoken, multer, cors, swagger-jsdoc, swagger-ui-express
 - Blockchain: Hedera Hashgraph (HCS/HTS/Smart Contracts)
-- Storage: IPFS via web3.storage
+- Storage: IPFS (web3.storage)
 - Database: PostgreSQL
-- Caching: Redis (Docker Compose)
-- Monitoring: Prometheus + Grafana (Docker Compose)
+- Cache: Redis
+- Proxy: Nginx
+- Monitoring: Prometheus + Grafana
 
-## �� Project Structure
+## 📦 Getting Started
 
-```
-.
-├─ backend/                 # Express API, Prisma, services, routes
-│  ├─ src/
-│  │  ├─ routes/            # auth, patients, doctors, admin, departments, hedera
-│  │  ├─ middleware/
-│  │  ├─ config/            # db, hedera, ipfs
-│  │  ├─ controllers/
-│  │  └─ index.js           # server entry
-│  ├─ prisma/schema.prisma
-│  ├─ Dockerfile(.prod)
-│  └─ .env.example
-├─ frontend/               # React app
-│  └─ src/
-├─ contracts/              # Solidity contracts
-├─ scripts/                # DB init/seed, contract deployment, Hedera setup
-├─ docs/                   # architecture.md, api.md, deployment.md
-├─ docker-compose.yml      # postgres, redis, backend, frontend, nginx, prometheus, grafana
-├─ nginx.conf              # example nginx config (align with compose volumes)
-└─ package.json            # workspace scripts
-```
-
-## 📦 Installation
-
-1. **Clone the repository**
-```
+1) Clone & install
+`ash
 git clone https://github.com/Edwin420s/MediChain
 cd medichain
-```
-
-## ⚙️ Setup
-
-1) Install dependencies
-```
 npm run install:all
-```
+`
 
-2) Configure environment (copy and edit ackend/.env.example → ackend/.env)
-- Database: DATABASE_URL
-- JWT: JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRES_IN
-- Hedera: HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY, HEDERA_NETWORK
-- Contracts/HCS (after deploy): HEALTH_RECORD_CONTRACT, DOCTOR_REGISTRY_CONTRACT, ACCESS_CONTROL_CONTRACT, HEDERA_AUDIT_TOPIC, HEDERA_RECORD_TOPIC, HEDERA_CONSENT_TOPIC
-- IPFS: WEB3_STORAGE_TOKEN
-- Email: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
-- App: NODE_ENV, PORT (default 3001), CORS_ORIGIN, FRONTEND_URL, API_URL
+2) Configure environment
+- Copy ackend/.env.example → ackend/.env and fill:
+  - DB: DATABASE_URL
+  - JWT: JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRES_IN
+  - Hedera: HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY, HEDERA_NETWORK
+  - Contracts/HCS (post-deploy): HEALTH_RECORD_CONTRACT, DOCTOR_REGISTRY_CONTRACT, ACCESS_CONTROL_CONTRACT, HEDERA_AUDIT_TOPIC, HEDERA_RECORD_TOPIC, HEDERA_CONSENT_TOPIC
+  - IPFS: WEB3_STORAGE_TOKEN
+  - Email: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+  - App: NODE_ENV, PORT (default 3001), CORS_ORIGIN, FRONTEND_URL, API_URL
 
 3) Database
 `ash
@@ -95,23 +119,22 @@ npm run db:setup
 npm run db:seed
 `
 
-4) Smart contracts (optional)
+4) Contracts (optional)
 `ash
 npm run contracts:deploy
 # utilities
 npm run hedera:setup
 `
 
-5) Run (dev)
+5) Run dev
 `ash
 npm run dev
 `
-
-Services:
 - Backend: http://localhost:3001
 - Frontend: http://localhost:3000
 - Health: GET http://localhost:3001/health
 - API Index: GET http://localhost:3001/api
+- Swagger UI: http://localhost:3001/api/docs
 
 ## 🧰 Workspace Scripts (root package.json)
 
@@ -119,33 +142,56 @@ Services:
 - dev – run backend and frontend concurrently
 - uild, uild:frontend, uild:backend
 - 	est, 	est:frontend, 	est:backend
-- db:setup – prisma generate + prisma db push
-- db:seed – seed data
+- db:setup, db:seed
 - contracts:deploy, hedera:setup
 - docker:build, docker:up, docker:down
 
-## �� API Overview
+## 📚 API Overview
 
 - Base URL (local): http://localhost:3001/api
 - Base URL (prod): https://api.medichain.com/api
-- Auth uses JWT Bearer: Authorization: Bearer <token>
+- Auth: Authorization: Bearer <jwt_token>
 - Route groups: /auth, /patients, /doctors, /admin, /departments, /hedera
-- See full details in docs/api.md.
+- Swagger: GET /api/docs
+- See full endpoint list: docs/api.md
 
 ## 🚀 Deployment
 
-### Docker Compose (recommended)
+### Docker Compose
 `ash
 npm run docker:build
 npm run docker:up
 `
-
-Exposed ports:
+Ports:
 - Backend: 3001:3001
 - Frontend: 3000:80
 - Nginx: 80:80, 443:443
 - Prometheus: 9090:9090
 - Grafana: 3002:3000
+- Node Exporter: 9100:9100
+- Nginx Exporter: 9113:9113
+
+Nginx volumes (ensure exist):
+- ./nginx.conf → /etc/nginx/nginx.conf
+- ./nginx/ssl → /etc/nginx/ssl (place cert.pem/key.pem)
+- ./nginx/logs → /var/log/nginx
+
+Nginx stub status for exporter: add in 
+ginx.conf (example)
+`
+ginx
+server {
+  listen 8080;
+  location /stub_status {
+    stub_status;
+    allow 127.0.0.1;
+    allow 172.20.0.0/16; # docker network
+    deny all;
+  }
+}
+`
+And ensure 
+ginx-exporter points to -nginx.scrape-uri=http://nginx:8080/stub_status.
 
 ### Manual
 `ash
@@ -153,40 +199,41 @@ cd frontend && npm run build
 cd ../backend && npm start
 `
 
-More details in docs/deployment.md.
-
 ## 🔒 Security
 
+- Helmet/CSP, CORS, compression
+- JWT auth + RBAC, route-level rate limits
+- On-chain audit trails (HCS) and tamper-evident hashes
 - End-to-end encryption before IPFS upload
-- JWT-based auth with RBAC
-- Hedera-based immutable audit trails (HCS)
-- Tamper-evident record hashing anchored on-chain
 
 ## 📈 Monitoring
 
 - Health: GET /health
-- Metrics (production only): GET /metrics
-- Prometheus/Grafana configured via monitoring/
+- Metrics (prod): GET /metrics
+- Prometheus stack: monitoring/prometheus.yml
+- Grafana: pre-provisioned dashboards (monitoring/grafana/)
 
-## 📝 Notes & Caveats
+## 🧪 Testing & CI/CD (recommended)
 
-- Ensure frontend API base includes /api.
-  - Frontend default uses VITE_API_URL || 'http://localhost:3001/api'.
-  - In Docker, set VITE_API_URL=https://api.medichain.com/api.
-- Frontend patientAPI.getAuditLogs() should call /patients/audit-logs to match backend route.
-- IPFS envs: backend uses WEB3_STORAGE_TOKEN; compose references IPFS_API_KEY/IPFS_SECRET — standardize on one.
-- Nginx volumes in docker-compose.yml reference ./nginx/nginx.conf; repository includes 
-ginx.conf at root — align paths.
+- Add unit/integration tests for controllers/services and contract tests (Hardhat/Foundry)
+- CI for lint/test/build, image publish, and security scanning
+
+## 📝 Troubleshooting
+
+- Ensure VITE_API_URL includes /api in prod
+- Provide TLS certs in ./nginx/ssl for 443 or use HTTP-only
+- Ensure WEB3_STORAGE_TOKEN is set for IPFS
+- Redis health is checked via TCP (uses REDIS_URL)
+- Prometheus exporters require stub_status config in Nginx
 
 ## 🤝 Contributing
 
-We welcome contributions. See docs/ for guidance. If present, read CONTRIBUTING.md.
+PRs welcome. Please follow code style and include tests where applicable. See docs/ for API/architecture/deployment details.
 
 ## 📄 License
 
-MIT (see package.json license). If a LICENSE file is missing, one should be added.
+MIT – see LICENSE.
 
 ## 🆘 Support
 
 Email support@medichain.com or join our Discord.
-

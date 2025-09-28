@@ -31,11 +31,6 @@ services:
       - medichain-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   # Backend API
   backend:
     build:
@@ -49,8 +44,7 @@ services:
       HEDERA_OPERATOR_ID: ${HEDERA_OPERATOR_ID}
       HEDERA_OPERATOR_KEY: ${HEDERA_OPERATOR_KEY}
       HEDERA_NETWORK: ${HEDERA_NETWORK:-mainnet}
-      IPFS_API_KEY: ${IPFS_API_KEY}
-      IPFS_SECRET: ${IPFS_SECRET}
+      WEB3_STORAGE_TOKEN: ${WEB3_STORAGE_TOKEN}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -60,19 +54,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - medichain-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
+{{ ... }}
           memory: 512M
         reservations:
           memory: 256M
@@ -83,18 +65,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
     environment:
-      VITE_API_URL: ${API_URL:-https://api.medichain.com}
+      VITE_API_URL: ${API_URL:-https://api.medichain.com/api}
       VITE_HEDERA_NETWORK: ${HEDERA_NETWORK:-mainnet}
     ports:
       - "3000:80"
     depends_on:
       - backend
     networks:
-      - medichain-network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
+{{ ... }}
           memory: 256M
         reservations:
           memory: 128M
@@ -106,7 +84,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/ssl:/etc/nginx/ssl
       - ./nginx/logs:/var/log/nginx
     depends_on:
@@ -114,7 +92,6 @@ services:
       - frontend
     networks:
       - medichain-network
-    restart: unless-stopped
     deploy:
       resources:
         limits:

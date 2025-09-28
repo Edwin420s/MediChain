@@ -22,6 +22,7 @@ contract AccessControl {
     
     address public admin;
     mapping(string => Role) public roles;
+    mapping(string => bool) public roleExists;
     mapping(bytes32 => bool) public permissions;
     mapping(address => string) public userRoles;
     
@@ -64,13 +65,12 @@ contract AccessControl {
         _createRole(roleName, description);
     }
     
-    function _createRole(string memory roleName, string memory description) 
-        internal 
-    {
-        require(!roles[roleName].members[admin], "Role already exists");
+    function _createRole(string memory roleName, string memory description) internal {
+        require(!roleExists[roleName], "Role already exists");
         
         roles[roleName].name = roleName;
         roles[roleName].description = description;
+        roleExists[roleName] = true;
         
         emit RoleCreated(roleName, description);
     }
@@ -83,7 +83,7 @@ contract AccessControl {
     }
     
     function _grantRole(string memory roleName, address member) internal {
-        require(roles[roleName].members[admin], "Role does not exist");
+        require(roleExists[roleName], "Role does not exist");
         require(!roles[roleName].members[member], "Member already has role");
         
         roles[roleName].members[member] = true;
@@ -97,6 +97,7 @@ contract AccessControl {
         external 
         onlyAdmin 
     {
+        require(roleExists[roleName], "Role does not exist");
         require(roles[roleName].members[member], "Member does not have role");
         
         roles[roleName].members[member] = false;
