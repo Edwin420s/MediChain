@@ -6,82 +6,77 @@ import "./utils/Strings.sol";
 contract AccessControl {
     using Strings for string;
 
-    struct Consent {
+    struct Access {
         string recordId;
         string patientDid;
         string doctorDid;
-        bool isActive;
-        uint256 expiryDate;
         uint256 grantedAt;
+        uint256 expiresAt;
+        bool isActive;
     }
 
-    mapping(string => Consent) public consents;
-    mapping(string => bool) public emergencyAccess;
+    address public admin;
+    mapping(string => Access) public accesses;
+    mapping(string => string[]) public patientAccesses;
 
-    event ConsentGranted(string indexed recordId, string patientDid, string doctorDid);
-    event ConsentRevoked(string indexed recordId, string patientDid, string doctorDid);
-    event EmergencyAccessGranted(string indexed patientDid, address grantedBy);
-    event EmergencyAccessRevoked(string indexed patientDid, address revokedBy);
+    event AccessGranted(string indexed recordId, string patientDid, string doctorDid, uint256 expiresAt);
+    event AccessRevoked(string indexed recordId, string patientDid, string doctorDid);
 
-    modifier onlyPatient(string memory patientDid) {
-        require(
-            // In a real scenario, you would check the patient's identity
-            // This is a simplified check
-            msg.sender == address(this), // This is not correct, just a placeholder
-            "Only patient can perform this action"
-        );
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin can perform this action");
         _;
     }
 
-    function grantConsent(
+    constructor() {
+        admin = msg.sender;
+    }
+
+    function grantAccess(
         string memory recordId,
         string memory patientDid,
         string memory doctorDid,
-        uint256 expiryDate
-    ) external {
-        require(!consents[recordId].grantedAt > 0, "Consent already granted");
+        uint256 duration
+    ) external onlyAdmin {
+        require(!accesses[recordId].isActive, "Access already granted for this record");
 
-        consents[recordId] = Consent({
+        uint256 expiresAt = block.timestamp + duration;
+        
+        accesses[recordId] = Access({
             recordId: recordId,
             patientDid: patientDid,
             doctorDid: doctorDid,
-            isActive: true,
-            expiryDate: expiryDate,
-            grantedAt: block.timestamp
+            grantedAt: block.timestamp,
+            expiresAt: expiresAt,
+            isActive: true
         });
 
-        emit ConsentGranted(recordId, patientDid, doctorDid);
+        patientAccesses[patientDid].push(recordId);
+
+        emit AccessGranted(recordId, patientDid, doctorDid, expiresAt);
     }
 
-    function revokeConsent(string memory recordId, string memory patientDid) external {
-        require(consents[recordId].grantedAt > 0, "Consent not found");
+    function revokeAccess(string memory recordId) external onlyAdmin {
+        require(accesses[recordId].isActive, "Access not active");
 
-        consents[recordId].isActive = false;
+        accesses[recordId].isActive = false;
 
-        emit ConsentRevoked(recordId, patientDid, consents[recordId].doctorDid);
+        emit AccessRevoked(recordId, accesses[recordId].patientDid, accesses[recordId].doctorDid);
     }
 
-    function grantEmergencyAccess(string memory patientDid) external {
-        emergencyAccess[patientDid] = true;
-        emit EmergencyAccessGranted(patientDid, msg.sender);
+    function hasAccess(string memory recordId, string memory doctorDid) external view returns (bool) {
+        Access memory access = accesses[recordId];
+        
+        if (!access.isActive) return false;
+        if (block.timestamp > access.expiresAt) return false;
+        
+        return Strings.compare(access.doctorDid, doctorDid);
     }
 
-    function revokeEmergencyAccess(string memory patientDid) external {
-        emergencyAccess[patientDid] = false;
-        emit EmergencyAccessRevoked(patientDid, msg.sender);
+    function getAccess(string memory recordId) external view returns (Access memory) {
+        return accesses[recordId];
     }
 
-    function verifyConsent(string memory recordId, string memory doctorDid) external view returns (bool) {
-        Consent memory consent = consents[recordId];
-
-        if (consent.grantedAt == 0) return false;
-        if (!consent.isActive) return false;
-        if (block.timestamp > consent.expiryDate) return false;
-
-        return Strings.compare(consent.doctorDid, doctorDid);
-    }
-
-    function hasEmergencyAccess(string memory patientDid) external view returns (bool) {
-        return emergencyAccess[patientDid];
+    function getPatientAccesses(string memory patientDid) external view returns (string[] memory) {
+        return patientAccesses[patientDid];
     }
 }

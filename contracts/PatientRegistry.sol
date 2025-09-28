@@ -17,18 +17,28 @@ contract PatientRegistry {
         uint256 createdAt;
     }
 
+    address public admin;
     mapping(string => Patient) public patients;
     mapping(address => string) public addressToDid;
 
     event PatientRegistered(string indexed patientDid, address patientAddress);
-    event PatientUpdated(string indexed patientDid);
+    event PatientUpdated(string indexed patientDid, address updatedBy);
 
-    modifier onlyPatient(string memory patientDid) {
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin can perform this action");
+        _;
+    }
+
+    modifier onlyPatientOrAdmin(string memory patientDid) {
         require(
-            patients[patientDid].patientAddress == msg.sender,
-            "Only patient can perform this action"
+            patients[patientDid].patientAddress == msg.sender || msg.sender == admin,
+            "Only patient or admin can perform this action"
         );
         _;
+    }
+
+    constructor() {
+        admin = msg.sender;
     }
 
     function registerPatient(
@@ -37,7 +47,7 @@ contract PatientRegistry {
         uint256 dateOfBirth,
         string memory bloodType,
         string memory allergies
-    ) external {
+    ) external onlyAdmin {
         require(!patients[patientDid].exists, "Patient already registered");
         require(!patientDid.isEmpty(), "DID cannot be empty");
 
@@ -61,16 +71,17 @@ contract PatientRegistry {
         string memory patientDid,
         string memory bloodType,
         string memory allergies
-    ) external onlyPatient(patientDid) {
+    ) external onlyPatientOrAdmin(patientDid) {
         require(patients[patientDid].exists, "Patient not registered");
 
         patients[patientDid].bloodType = bloodType;
         patients[patientDid].allergies = allergies;
 
-        emit PatientUpdated(patientDid);
+        emit PatientUpdated(patientDid, msg.sender);
     }
 
     function getPatient(string memory patientDid) external view returns (Patient memory) {
+        require(patients[patientDid].exists, "Patient not registered");
         return patients[patientDid];
     }
 

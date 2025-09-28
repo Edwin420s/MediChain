@@ -1,49 +1,56 @@
-import { Client, AccountId, PrivateKey, TopicCreateTransaction } from '@hashgraph/sdk'
-import dotenv from 'dotenv'
+import { Client, AccountId, PrivateKey, TopicCreateTransaction } from '@hashgraph/sdk';
+import dotenv from 'dotenv';
 
-dotenv.config()
+dotenv.config();
 
 async function setupHedera() {
   try {
-    const client = Client.forTestnet()
+    // Initialize client
+    const client = Client.forTestnet();
     client.setOperator(
       AccountId.fromString(process.env.HEDERA_OPERATOR_ID),
       PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY)
-    )
+    );
 
-    // Create HCS topic for audit logs
-    const topicTx = await new TopicCreateTransaction()
-      .setTopicMemo('MediChain Audit Logs')
-      .execute(client)
+    console.log('Setting up Hedera topics for MediChain...');
 
-    const topicReceipt = await topicTx.getReceipt(client)
-    const topicId = topicReceipt.topicId
+    // Create topics for different types of events
+    const topics = [
+      { name: 'AUDIT_TOPIC', memo: 'MediChain Audit Logs' },
+      { name: 'RECORD_TOPIC', memo: 'Medical Record Anchors' },
+      { name: 'CONSENT_TOPIC', memo: 'Consent Management Logs' },
+      { name: 'ACCESS_TOPIC', memo: 'Access Control Events' }
+    ];
 
-    console.log('HCS Topic created:', topicId.toString())
+    const topicIds = {};
 
-    // Create HCS topic for consent logs
-    const consentTopicTx = await new TopicCreateTransaction()
-      .setTopicMemo('MediChain Consent Logs')
-      .execute(client)
+    for (const topic of topics) {
+      const transaction = new TopicCreateTransaction()
+        .setTopicMemo(topic.memo)
+        .setMaxTransactionFee(100000000); // 1 HBAR
 
-    const consentTopicReceipt = await consentTopicTx.getReceipt(client)
-    const consentTopicId = consentTopicReceipt.topicId
-
-    console.log('Consent HCS Topic created:', consentTopicId.toString())
-
-    const config = {
-      auditTopicId: topicId.toString(),
-      consentTopicId: consentTopicId.toString()
+      const txResponse = await transaction.execute(client);
+      const receipt = await txResponse.getReceipt(client);
+      
+      topicIds[topic.name] = receipt.topicId.toString();
+      console.log(`${topic.name}: ${receipt.topicId}`);
     }
 
-    console.log('Hedera setup completed successfully')
-    console.log('Configuration:', config)
+    console.log('\nHedera setup completed successfully!');
+    console.log('Topic IDs:', topicIds);
 
-    return config
+    // Save to environment file
+    const envUpdates = Object.entries(topicIds)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    console.log('\nAdd these to your .env file:');
+    console.log(envUpdates);
 
   } catch (error) {
-    console.error('Error setting up Hedera:', error)
+    console.error('Hedera setup failed:', error);
+    process.exit(1);
   }
 }
 
-setupHedera()
+setupHedera();

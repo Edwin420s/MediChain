@@ -1,0 +1,36 @@
+{
+  "name": "medichain",
+  "version": "1.0.0",
+  "description": "Decentralized Health Records on Hedera",
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "db:setup": "cd backend && npx prisma generate && npx prisma db push",
+    "db:seed": "cd backend && npm run db:seed",
+    "contracts:deploy": "node scripts/deployContracts.js",
+    "hedera:setup": "node scripts/setupHedera.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "keywords": [
+    "hedera",
+    "blockchain",
+    "healthcare",
+    "medical",
+    "records"
+  ],
+  "author": "MediChain Team",
+  "license": "MIT"
+}

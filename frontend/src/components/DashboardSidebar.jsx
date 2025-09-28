@@ -1,76 +1,78 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  User, 
   FileText, 
   Share2, 
   Shield, 
-  QrCode,
-  Users,
-  Settings
+  QrCode, 
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 const DashboardSidebar = ({ userRole }) => {
   const location = useLocation();
 
   const patientMenu = [
-    { name: 'Dashboard', href: '/patient', icon: User },
-    { name: 'My Records', href: '/patient/records', icon: FileText },
-    { name: 'Share Access', href: '/patient/share', icon: Share2 },
-    { name: 'Emergency QR', href: '/patient/emergency', icon: QrCode },
-    { name: 'Audit Log', href: '/patient/audit', icon: Shield },
+    { path: '/patient', icon: FileText, label: 'My Records' },
+    { path: '/patient/share', icon: Share2, label: 'Share Access' },
+    { path: '/patient/emergency', icon: QrCode, label: 'Emergency QR' },
+    { path: '/patient/audit', icon: Shield, label: 'Audit Log' },
+    { path: '/patient/profile', icon: User, label: 'Profile' },
   ];
 
   const doctorMenu = [
-    { name: 'Dashboard', href: '/doctor', icon: User },
-    { name: 'Patients', href: '/doctor/patients', icon: Users },
-    { name: 'Records', href: '/doctor/records', icon: FileText },
-    { name: 'Requests', href: '/doctor/requests', icon: Share2 },
-    { name: 'Audit Log', href: '/doctor/audit', icon: Shield },
+    { path: '/doctor', icon: FileText, label: 'Dashboard' },
+    { path: '/doctor/patients', icon: User, label: 'Patients' },
+    { path: '/doctor/requests', icon: Share2, label: 'Access Requests' },
+    { path: '/doctor/audit', icon: Shield, label: 'Audit Log' },
   ];
 
   const adminMenu = [
-    { name: 'Dashboard', href: '/admin', icon: User },
-    { name: 'Departments', href: '/admin/departments', icon: Users },
-    { name: 'Doctors', href: '/admin/doctors', icon: Users },
-    { name: 'Patients', href: '/admin/patients', icon: Users },
-    { name: 'System Settings', href: '/admin/settings', icon: Settings },
+    { path: '/admin', icon: FileText, label: 'Overview' },
+    { path: '/admin/departments', icon: User, label: 'Departments' },
+    { path: '/admin/doctors', icon: User, label: 'Doctors' },
+    { path: '/admin/patients', icon: User, label: 'Patients' },
+    { path: '/admin/system', icon: Settings, label: 'System Settings' },
   ];
 
   const menu = userRole === 'PATIENT' ? patientMenu : 
-               userRole === 'DOCTOR' ? doctorMenu : adminMenu;
+                userRole === 'DOCTOR' ? doctorMenu : adminMenu;
 
   return (
-    <div className="bg-gray-800 w-64 min-h-screen p-4">
-      <div className="flex items-center space-x-2 p-4">
-        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">M</span>
-        </div>
-        <span className="text-white font-bold text-xl">MediChain</span>
+    <div className="w-64 bg-white shadow-lg min-h-screen">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold text-gray-800">MediChain</h2>
+        <p className="text-sm text-gray-600">{userRole} Dashboard</p>
       </div>
-      <nav className="mt-8">
+      <nav className="p-4">
         <ul className="space-y-2">
           {menu.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.href;
             return (
-              <li key={item.name}>
+              <li key={item.path}>
                 <Link
-                  to={item.href}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium ${
-                    isActive
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  to={item.path}
+                  className={`flex items-center space-x-3 p-3 rounded-lg transition ${
+                    location.pathname === item.path
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   <Icon size={20} />
-                  <span>{item.name}</span>
+                  <span>{item.label}</span>
                 </Link>
               </li>
             );
           })}
         </ul>
       </nav>
+      <div className="absolute bottom-0 w-64 p-4 border-t">
+        <button className="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-50 w-full">
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
   );
 };
