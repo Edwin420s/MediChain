@@ -2,43 +2,306 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
+// Load environment variables
+config();
+
+// Import routes
 import authRoutes from './routes/authRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
+import hederaRoutes from './routes/hederaRoutes.js';
 
-import errorHandler from './middleware/errorHandler.js';
+// Import middleware
+import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { logger } from './utils/logger.js';
 
-dotenv.config();
+// Import services
+import hederaConfig from './config/hedera.js';
+import prisma from './config/db.js';
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Middleware
-app.use(helmet());
-app.use(compression());
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+class MediChainServer {
+  constructor() {
+    this.app = express();
+    this.port = process.env.PORT || 3001;
+    this.env = process.env.NODE_ENV || 'development';
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/doctors', doctorRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/departments', departmentRoutes);
+    this.initializeServices();
+    this.initializeMiddleware();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+  }
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+  async initializeServices() {
+    try {
+      // Initialize Hedera
+      hederaConfig.initialize();
+      logger.info('Hedera service initialized');
 
-// Error handling
-app.use(errorHandler);
+      // Test database connection
+      await prisma.$connect();
+      logger.info('Database connected successfully');
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+      // Perform health checks
+      await this.healthCheck();
+
+    } catch (error) {
+      logger.error('Service initialization failed:', error);
+      process.exit(1);
+    }
+  }
+
+  initializeMiddleware() {
+    // Security middleware
+    this.app.use(helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+        },
+      },
+    }));
+
+    // CORS configuration
+    this.app.use(cors({
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    }));
+
+    // Rate limiting
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: process.env.NODE_ENV === 'production' ? 100 : 1000, // requests per window
+      message: {
+        success: false,
+        error: 'Too many requests from this IP, please try again later.'
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+    this.app.use(limiter);
+
+    // Body parsing middleware
+    this.app.use(express.json({ limit: '10mb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Compression
+    this.app.use(compression());
+
+    // Request logging
+    this.app.use((req, res, next) => {
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.apiLog(req, res, null, duration);
+      });
+      next();
+    });
+
+    // Health check endpoint
+    this.app.get('/health', async (req, res) => {
+      const healthcheck = {
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        environment: this.env,
+        services: {}
+      };
+
+      try {
+        // Database health check
+        await prisma.$queryRaw`SELECT 1`;
+        healthcheck.services.database = 'healthy';
+
+        // Hedera health check
+        const hederaHealth = await hederaConfig.healthCheck();
+        healthcheck.services.hedera = hederaHealth.healthy ? 'healthy' : 'unhealthy';
+
+        // Redis health check (if implemented)
+        healthcheck.services.redis = 'healthy';
+
+        res.status(200).json(healthcheck);
+      } catch (error) {
+        healthcheck.services.database = 'unhealthy';
+        logger.error('Health check failed:', error);
+        res.status(503).json(healthcheck);
+      }
+    });
+
+    // Metrics endpoint for monitoring
+    this.app.get('/metrics', async (req, res) => {
+      if (process.env.NODE_ENV !== 'production') {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      try {
+        const metrics = {
+          timestamp: new Date().toISOString(),
+          memory: process.memoryUsage(),
+          uptime: process.uptime(),
+          database: {
+            connections: await this.getDatabaseMetrics()
+          }
+        };
+        res.json(metrics);
+      } catch (error) {
+        logger.error('Metrics collection failed:', error);
+        res.status(500).json({ error: 'Metrics unavailable' });
+      }
+    });
+  }
+
+  initializeRoutes() {
+    // API routes
+    this.app.use('/api/auth', authRoutes);
+    this.app.use('/api/patients', patientRoutes);
+    this.app.use('/api/doctors', doctorRoutes);
+    this.app.use('/api/admin', adminRoutes);
+    this.app.use('/api/departments', departmentRoutes);
+    this.app.use('/api/hedera', hederaRoutes);
+
+    // API documentation
+    this.app.use('/api/docs', express.static(join(__dirname, '../docs')));
+
+    // Root endpoint
+    this.app.get('/', (req, res) => {
+      res.json({
+        message: 'MediChain API Server',
+        version: '1.0.0',
+        environment: this.env,
+        timestamp: new Date().toISOString(),
+        documentation: '/api/docs'
+      });
+    });
+
+    // API info endpoint
+    this.app.get('/api', (req, res) => {
+      res.json({
+        name: 'MediChain API',
+        version: '1.0.0',
+        description: 'Decentralized Health Records on Hedera',
+        endpoints: {
+          auth: '/api/auth',
+          patients: '/api/patients',
+          doctors: '/api/doctors',
+          admin: '/api/admin',
+          departments: '/api/departments',
+          hedera: '/api/hedera'
+        }
+      });
+    });
+  }
+
+  initializeErrorHandling() {
+    // 404 handler
+    this.app.use(notFound);
+
+    // Global error handler
+    this.app.use(errorHandler);
+
+    // Process error handlers
+    process.on('unhandledRejection', (err) => {
+      logger.error('Unhandled Promise Rejection:', err);
+      process.exit(1);
+    });
+
+    process.on('uncaughtException', (err) => {
+      logger.error('Uncaught Exception:', err);
+      process.exit(1);
+    });
+  }
+
+  async getDatabaseMetrics() {
+    try {
+      const metrics = await prisma.$queryRaw`
+        SELECT 
+          count(*) as total_connections,
+          count(*) FILTER (WHERE state = 'active') as active_connections,
+          count(*) FILTER (WHERE state = 'idle') as idle_connections
+        FROM pg_stat_activity 
+        WHERE datname = ${process.env.DB_NAME}
+      `;
+      return metrics[0];
+    } catch (error) {
+      logger.error('Database metrics error:', error);
+      return { total_connections: 0, active_connections: 0, idle_connections: 0 };
+    }
+  }
+
+  async healthCheck() {
+    const checks = [];
+
+    // Database health check
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      checks.push({ service: 'database', status: 'healthy' });
+    } catch (error) {
+      checks.push({ service: 'database', status: 'unhealthy', error: error.message });
+    }
+
+    // Hedera health check
+    try {
+      const hederaHealth = await hederaConfig.healthCheck();
+      checks.push({ service: 'hedera', status: hederaHealth.healthy ? 'healthy' : 'unhealthy' });
+    } catch (error) {
+      checks.push({ service: 'hedera', status: 'unhealthy', error: error.message });
+    }
+
+    return checks;
+  }
+
+  start() {
+    this.server = this.app.listen(this.port, () => {
+      logger.info(`MediChain Server running in ${this.env} mode on port ${this.port}`);
+      logger.info(`Health check available at http://localhost:${this.port}/health`);
+      logger.info(`API documentation available at http://localhost:${this.port}/api/docs`);
+    });
+
+    // Graceful shutdown
+    const gracefulShutdown = async (signal) => {
+      logger.info(`Received ${signal}, starting graceful shutdown...`);
+      
+      this.server.close(async () => {
+        logger.info('HTTP server closed.');
+        
+        try {
+          await prisma.$disconnect();
+          logger.info('Database connections closed.');
+        } catch (error) {
+          logger.error('Error closing database connections:', error);
+        }
+        
+        logger.info('Graceful shutdown completed.');
+        process.exit(0);
+      });
+
+      // Force close after 30 seconds
+      setTimeout(() => {
+        logger.error('Forcing shutdown after timeout...');
+        process.exit(1);
+      }, 30000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  }
+}
+
+// Create and start server
+const server = new MediChainServer();
+server.start();
+
+export default server;

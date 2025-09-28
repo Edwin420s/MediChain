@@ -1,85 +1,218 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+
+// Layouts
+import App from './App';
+
+// Pages
 import LandingPage from './pages/LandingPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
-import DepartmentAdmin from './pages/DepartmentAdmin';
-import RecordsViewer from './pages/RecordsViewer';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+// Auth pages
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+// Error page
+import ErrorPage from './pages/ErrorPage';
+
+// Protected route component
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const { user, isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-const AppRouter = () => {
-  return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
+// Public route component (redirect if already authenticated)
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
-      {/* Protected routes */}
-      <Route
-        path="/patient/*"
-        element={
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated && user) {
+    // Redirect to appropriate dashboard based on role
+    switch (user.role) {
+      case 'PATIENT':
+        return <Navigate to="/patient" replace />;
+      case 'DOCTOR':
+        return <Navigate to="/doctor" replace />;
+      case 'ADMIN':
+        return <Navigate to="/admin" replace />;
+      default:
+        return <Navigate to="/" replace />;
+    }
+  }
+
+  return children;
+};
+
+// Create router configuration
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        index: true,
+        element: <LandingPage />
+      },
+      {
+        path: 'login',
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        )
+      },
+      {
+        path: 'register',
+        element: (
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        )
+      },
+      {
+        path: 'patient',
+        element: (
           <ProtectedRoute allowedRoles={['PATIENT']}>
             <PatientDashboard />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/doctor/*"
-        element={
+        )
+      },
+      {
+        path: 'patient/records',
+        element: (
+          <ProtectedRoute allowedRoles={['PATIENT']}>
+            <PatientDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'patient/share',
+        element: (
+          <ProtectedRoute allowedRoles={['PATIENT']}>
+            <PatientDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'patient/emergency',
+        element: (
+          <ProtectedRoute allowedRoles={['PATIENT']}>
+            <PatientDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'patient/audit',
+        element: (
+          <ProtectedRoute allowedRoles={['PATIENT']}>
+            <PatientDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'doctor',
+        element: (
           <ProtectedRoute allowedRoles={['DOCTOR']}>
             <DoctorDashboard />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/*"
-        element={
+        )
+      },
+      {
+        path: 'doctor/patients',
+        element: (
+          <ProtectedRoute allowedRoles={['DOCTOR']}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'doctor/requests',
+        element: (
+          <ProtectedRoute allowedRoles={['DOCTOR']}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'doctor/audit',
+        element: (
+          <ProtectedRoute allowedRoles={['DOCTOR']}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'admin',
+        element: (
           <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminDashboard />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/department/*"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <DepartmentAdmin />
+        )
+      },
+      {
+        path: 'admin/doctors',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminDashboard />
           </ProtectedRoute>
-        }
-      />
-
-      {/* Record viewer - accessible with proper permissions */}
-      <Route
-        path="/records/:recordId"
-        element={
-          <ProtectedRoute>
-            <RecordsViewer />
+        )
+      },
+      {
+        path: 'admin/departments',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminDashboard />
           </ProtectedRoute>
-        }
-      />
+        )
+      },
+      {
+        path: 'admin/system',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        )
+      },
+      // Catch all route - 404
+      {
+        path: '*',
+        element: <ErrorPage />
+      }
+    ]
+  }
+]);
 
-      {/* Fallback route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+// Router provider component
+const AppRouter = () => {
+  return <RouterProvider router={router} />;
 };
 
 export default AppRouter;
