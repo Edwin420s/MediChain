@@ -262,5 +262,3 @@ MIT – see LICENSE.
 ## 🆘 Support
 
 Email support@medichain.com or join our Discord: https://discord.gg/medichain
-
-
