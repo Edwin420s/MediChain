@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,51 +11,64 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  did       String   @unique
-  role      UserRole
-  email     String?  @unique
-  name      String?
-  publicKey String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         UserRole
+  did          String?   @unique
+  publicKey    String?
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  patient   Patient?
-  doctor    Doctor?
-  admin     Admin?
+  // Relations
+  patient      Patient?
+  doctor       Doctor?
+  admin        Admin?
+  accessRequests AccessRequest[]
+  auditLogs    AuditLog[]
 
   @@map("users")
 }
 
 model Patient {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  dateOfBirth DateTime?
-  bloodType   String?
-  allergies   String?
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  dateOfBirth     DateTime?
+  bloodType       String?
+  allergies       String?
+  emergencyContact Json?
+  createdAt       DateTime @default(now())
 
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  records   MedicalRecord[]
-  consents  Consent[]
-  auditLogs AuditLog[]
+  // Relations
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records        MedicalRecord[]
+  consents       Consent[]
+  accessRequests AccessRequest[]
+  auditLogs      AuditLog[]
 
   @@map("patients")
 }
 
 model Doctor {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  licenseNumber String?
-  specialization String?
-  departmentId  String?
-  isVerified    Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  licenseNumber   String
+  specialization  String
+  departmentId    String?
+  isVerified      Boolean  @default(false)
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  createdAt       DateTime @default(now())
 
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department Department? @relation(fields: [departmentId], references: [id])
-  consents  Consent[]
-  auditLogs AuditLog[]
+  // Relations
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department? @relation(fields: [departmentId], references: [id])
+  consents       Consent[]
+  accessRequests AccessRequest[]
+  auditLogs      AuditLog[]
 
   @@map("doctors")
 }
@@ -60,38 +76,46 @@ model Doctor {
 model Admin {
   id         String   @id @default(cuid())
   userId     String   @unique
-  department String?
   level      AdminLevel @default(DEPARTMENT)
+  department String?
   createdAt  DateTime @default(now())
 
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
 }
 
 model Department {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
+  createdBy   String?
   createdAt   DateTime @default(now())
 
+  // Relations
   doctors Doctor[]
 
   @@map("departments")
 }
 
 model MedicalRecord {
-  id        String   @id @default(cuid())
-  patientId String
-  cid       String   // IPFS Content ID
-  recordHash String  // Hash stored on Hedera
-  recordType RecordType
-  title     String
+  id          String      @id @default(cuid())
+  patientId   String
+  cid         String      // IPFS Content ID
+  recordHash  String      // Hash stored on Hedera
+  recordType  RecordType
+  title       String
   description String?
-  fileSize  Int
-  mimeType  String?
-  hcsTxId   String?  // Hedera Consensus Service Transaction ID
-  createdAt DateTime @default(now())
+  fileSize    Int
+  mimeType    String?
+  hcsTxId     String?     // Hedera Consensus Service Transaction ID
+  uploadedBy  String      // User ID who uploaded the record
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  // Relations
+  patient  Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   consents Consent[]
 
   @@map("medical_records")
@@ -107,7 +131,9 @@ model Consent {
   expiryDate  DateTime?
   hcsTxId     String?  // Hedera transaction ID
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  // Relations
   record  MedicalRecord @relation(fields: [recordId], references: [id])
   patient Patient       @relation(fields: [patientId], references: [id])
   doctor  Doctor        @relation(fields: [doctorId], references: [id])
@@ -115,27 +141,55 @@ model Consent {
   @@map("consents")
 }
 
+model AccessRequest {
+  id          String         @id @default(cuid())
+  patientId   String
+  doctorId    String
+  recordId    String?
+  purpose     String
+  status      RequestStatus  @default(PENDING)
+  expiresAt   DateTime
+  respondedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor  @relation(fields: [doctorId], references: [id])
+
+  @@map("access_requests")
+}
+
 model AuditLog {
   id          String      @id @default(cuid())
   action      AuditAction
   actorId     String
   targetId    String?
+  targetType  String?     // 'PATIENT', 'RECORD', 'CONSENT', etc.
   details     Json?
   hcsTxId     String?
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime    @default(now())
 
+  // Relations
   actor User @relation(fields: [actorId], references: [id])
 
   @@map("audit_logs")
 }
 
+// Enums
 enum UserRole {
   PATIENT
   DOCTOR
   ADMIN
   SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 enum RecordType {
@@ -148,12 +202,27 @@ enum RecordType {
 }
 
 enum AuditAction {
+  USER_REGISTER
+  USER_LOGIN
+  USER_LOGOUT
   RECORD_CREATE
   RECORD_VIEW
+  RECORD_DELETE
   CONSENT_GRANT
   CONSENT_REVOKE
-  USER_LOGIN
-  ACCESS_DENIED
+  ACCESS_REQUEST
+  ACCESS_APPROVE
+  ACCESS_DENY
+  EMERGENCY_ACCESS
+  PROFILE_UPDATE
+  PASSWORD_CHANGE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
 }
 
 enum AdminLevel {

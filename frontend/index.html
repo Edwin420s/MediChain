@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/medichain-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MediChain - Secure, decentralized health records powered by Hedera Hashgraph. Empowering patients with control over their medical data.">
+    <meta name="keywords" content="healthcare, medical records, blockchain, hedera, patient data, decentralized">
+    <meta name="author" content="MediChain">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="MediChain - Decentralized Health Records">
+    <meta property="og:description" content="Secure, patient-owned medical records on the Hedera blockchain">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/medichain-og-image.png">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MediChain - Decentralized Health Records">
+    <meta name="twitter:description" content="Secure, patient-owned medical records on the Hedera blockchain">
+    <meta name="twitter:image" content="/medichain-twitter-image.png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0A3D62">
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <title>MediChain - Decentralized Health Records on Hedera</title>
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self' https://api.medichain.com wss:;
+    ">
+  </head>
+  <body>
+    <div id="root">
+      <!-- Loading spinner while app loads -->
+      <div class="loading-container">
+        <div class="loading-spinner-large"></div>
+        <p>Loading MediChain...</p>
+      </div>
+    </div>
+    
+    <!-- Noscript fallback -->
+    <noscript>
+      <div class="noscript-warning">
+        <h1>MediChain - JavaScript Required</h1>
+        <p>Please enable JavaScript to use the MediChain application.</p>
+        <p>MediChain is a secure platform for managing your health records on the blockchain.</p>
+      </div>
+    </noscript>
+    
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <style>
+      /* Loading styles */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #0A3D62 0%, #16A085 100%);
+        color: white;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .loading-spinner-large {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loading-container p {
+        font-size: 18px;
+        margin: 0;
+      }
+      
+      /* Noscript styles */
+      .noscript-warning {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .noscript-warning h1 {
+        color: #dc3545;
+        margin-bottom: 20px;
+      }
+      
+      .noscript-warning p {
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 15px;
+      }
+    </style>
+  </body>
+</html>
