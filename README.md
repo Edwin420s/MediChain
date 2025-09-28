@@ -2,6 +2,23 @@
 
 A production-ready healthcare platform for secure, patient-owned medical records, built on Hedera Hashgraph and IPFS, with a modern React + Node/Express stack. It provides end-to-end encrypted storage, consent-based access control, immutable audit trails, and production-grade deployment/monitoring.
 
+## 🌍 Non‑Technical Summary
+
+MediChain is a digital health record system that puts patients in control of their medical information. Instead of paper files that get lost or repeating the same tests at every clinic, your records are stored safely, can be shared only with your permission, and follow you wherever you go. Doctors get the right information at the right time, patients save money and time, and hospitals reduce fraud and errors. Everything is designed for real-world use across clinics and regions, with privacy and transparency built in.
+
+### Who it’s for
+
+- Patients who want their medical history to travel with them across clinics and cities.
+- Doctors and hospitals needing fast, verified access to patient records (with consent).
+- Health programs and insurers that must reduce fraud and duplicate tests.
+
+### Benefits
+
+- Fewer repeated tests and faster care at new clinics.
+- Clear, permission-based sharing you can turn on or off anytime.
+- A tamper-evident history of who accessed what and when.
+- Works across regions and providers without locking you into one hospital.
+
 ## 🚀 Summary
 
 - **Purpose**: Patient-owned health records with granular, consent-based sharing.
@@ -244,6 +261,6 @@ MIT – see LICENSE.
 
 ## 🆘 Support
 
-Email   or join our Discord.
+Email support@medichain.com or join our Discord: https://discord.gg/medichain
 
 
