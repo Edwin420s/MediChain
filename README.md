@@ -20,12 +20,14 @@ A production-ready healthcare platform for secure, patient-owned medical records
 ```
 mermaid
 flowchart LR
+
   A[Patient/Doctor/Admin] -->|HTTPS| B[Frontend (React)]
   B -->|REST /api/*| C[Backend (Express)]
   C -->|Prisma| D[(PostgreSQL)]
   C -->|Hedera SDK| E[Hedera (HCS/HTS/SC)]
   C -->|web3.storage| F[IPFS]
   C -->|Redis| G[(Redis Cache)]
+
 ```
 
 ## 📁 Project Structure
@@ -107,6 +109,7 @@ npm run install:all
 
 2) Configure environment
 - Copy ackend/.env.example → ackend/.env and fill:
+  ```
   - DB: DATABASE_URL
   - JWT: JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRES_IN
   - Hedera: HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY, HEDERA_NETWORK
@@ -242,4 +245,5 @@ MIT – see LICENSE.
 ## 🆘 Support
 
 Email   or join our Discord.
+
 
