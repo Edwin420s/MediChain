@@ -1,4 +1,5 @@
 import axios from 'axios';
+import FormData from 'form-data';
 
 class IPFSService {
   constructor() {
@@ -36,7 +37,7 @@ class IPFSService {
         {
           maxBodyLength: 'Infinity',
           headers: {
-            'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
+            ...formData.getHeaders(),
             'pinata_api_key': this.pinataApiKey,
             'pinata_secret_api_key': this.pinataSecret,
           },
@@ -59,7 +60,10 @@ class IPFSService {
   async uploadToWeb3Storage(file) {
     try {
       const formData = new FormData();
-      formData.append('file', new Blob([file.buffer]), file.originalname);
+      formData.append('file', file.buffer, {
+        filename: file.originalname,
+        contentType: file.mimetype
+      });
 
       const response = await axios.post(
         'https://api.web3.storage/upload',
@@ -67,8 +71,9 @@ class IPFSService {
         {
           headers: {
             'Authorization': `Bearer ${this.web3StorageToken}`,
-            'Content-Type': 'multipart/form-data'
-          }
+            ...formData.getHeaders()
+          },
+          maxBodyLength: Infinity
         }
       );
 

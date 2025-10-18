@@ -66,7 +66,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-300 text-sm">
-            © 2024 MediChain. All rights reserved.
+            © 2025 MediChain. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex items-center space-x-2">
             <span className="text-gray-300 text-sm">Built on</span>

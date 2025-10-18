@@ -49,7 +49,7 @@ class MediChainServer {
       hederaConfig.initialize();
       logger.info('Hedera service initialized');
 
-      await prisma.();
+      await prisma.$connect();
       logger.info('Database connected successfully');
 
       await this.healthCheck();
@@ -110,7 +110,7 @@ class MediChainServer {
         services: {},
       };
       try {
-        await prisma.SELECT 1;
+        await prisma.$queryRaw`SELECT 1`;
         healthcheck.services.database = 'healthy';
 
         const hederaHealth = await hederaConfig.healthCheck();
@@ -152,7 +152,7 @@ class MediChainServer {
           description: 'Decentralized Health Records on Hedera',
         },
         servers: [
-          { url: process.env.API_URL ? ${process.env.API_URL}/api : 'http://localhost:3001/api' },
+          { url: process.env.API_URL ? `${process.env.API_URL}/api` : 'http://localhost:3001/api' },
         ],
       },
       apis: [
@@ -213,15 +213,15 @@ class MediChainServer {
 
   async getDatabaseMetrics() {
     try {
-      const metrics = await prisma.
+      const rows = await prisma.$queryRawUnsafe(`
         SELECT 
-          count(*) as total_connections,
-          count(*) FILTER (WHERE state = 'active') as active_connections,
-          count(*) FILTER (WHERE state = 'idle') as idle_connections
+          COUNT(*)::int AS total_connections,
+          COUNT(*) FILTER (WHERE state = 'active')::int AS active_connections,
+          COUNT(*) FILTER (WHERE state = 'idle')::int AS idle_connections
         FROM pg_stat_activity 
-        WHERE datname = 
-      ;
-      return metrics[0];
+        WHERE datname = current_database()
+      `);
+      return rows && rows[0] ? rows[0] : { total_connections: 0, active_connections: 0, idle_connections: 0 };
     } catch (error) {
       logger.error('Database metrics error:', error);
       return { total_connections: 0, active_connections: 0, idle_connections: 0 };
@@ -231,7 +231,7 @@ class MediChainServer {
   async healthCheck() {
     const checks = [];
     try {
-      await prisma.SELECT 1;
+      await prisma.$queryRaw`SELECT 1`;
       checks.push({ service: 'database', status: 'healthy' });
     } catch (error) {
       checks.push({ service: 'database', status: 'unhealthy', error: error.message });
@@ -280,17 +280,17 @@ class MediChainServer {
 
   start() {
     this.server = this.app.listen(this.port, () => {
-      logger.info(MediChain Server running in  mode on port );
-      logger.info(Health check available at http://localhost:/health);
-      logger.info(API documentation available at http://localhost:/api/docs);
+      logger.info(`MediChain Server running in ${this.env} mode on port ${this.port}`);
+      logger.info(`Health check available at http://localhost:${this.port}/health`);
+      logger.info(`API documentation available at http://localhost:${this.port}/api/docs`);
     });
 
     const gracefulShutdown = async (signal) => {
-      logger.info(Received , starting graceful shutdown...);
+      logger.info(`Received ${signal}, starting graceful shutdown...`);
       this.server.close(async () => {
         logger.info('HTTP server closed.');
         try {
-          await prisma.();
+          await prisma.$disconnect();
           logger.info('Database connections closed.');
         } catch (error) {
           logger.error('Error closing database connections:', error);

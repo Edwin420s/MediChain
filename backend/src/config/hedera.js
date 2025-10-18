@@ -1,4 +1,4 @@
-import { Client, AccountId, PrivateKey } from '@hashgraph/sdk';
+import { Client, AccountId, PrivateKey, AccountBalanceQuery } from '@hashgraph/sdk';
 import { logger } from '../utils/logger.js';
 
 class HederaConfig {
@@ -66,13 +66,15 @@ class HederaConfig {
   async healthCheck() {
     try {
       const client = this.getClient();
-      const accountBalance = await client.getAccountBalance(this.operatorId);
+      const balance = await new AccountBalanceQuery()
+        .setAccountId(this.operatorId)
+        .execute(client);
       
       return {
         healthy: true,
         network: this.network,
         operatorId: this.operatorId.toString(),
-        balance: accountBalance.toString(),
+        balance: balance.hbars.toString(),
         timestamp: new Date().toISOString()
       };
     } catch (error) {
