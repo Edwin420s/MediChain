@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import Button from '../components/Button';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +23,7 @@ const RegisterPage = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { push } = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -66,12 +69,15 @@ const RegisterPage = () => {
       const result = await register(userData);
       
       if (result.success) {
+        push({ type: 'success', title: 'Account created', message: 'Your account has been created successfully.' });
         navigate('/');
       } else {
         setError(result.error);
+        push({ type: 'error', title: 'Registration failed', message: result.error || 'Please check your details' });
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
+      push({ type: 'error', title: 'Unexpected error', message: 'Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -319,11 +325,7 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary py-3 px-4 text-base font-medium"
-              >
+              <Button type="submit" disabled={loading} className="w-full" size="lg">
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="loading-spinner mr-2"></div>
@@ -332,7 +334,7 @@ const RegisterPage = () => {
                 ) : (
                   'Create account'
                 )}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
