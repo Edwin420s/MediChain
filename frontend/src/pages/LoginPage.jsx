@@ -50,29 +50,20 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">M</span>
-          </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Sign in to MediChain
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link
-            to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
-          >
-            create a new account
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center px-4 py-20">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center space-x-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-teal-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">M</span>
+            </div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">MediChain</span>
           </Link>
-        </p>
-      </div>
+          <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
+          <p className="text-gray-600 mt-2">Sign in to access your health records</p>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div>
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
@@ -168,33 +159,16 @@ const LoginPage = () => {
               </Button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Accounts</span>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <strong>Patient:</strong> patient@example.com / patient123
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <strong>Doctor:</strong> doctor@example.com / doctor123
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <strong>Admin:</strong> admin@example.com / admin123
-              </div>
-            </div>
+          <div className="mt-6 text-center">
+            <span className="text-gray-600">Don't have an account? </span>
+            <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+              Create account
+            </Link>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default LoginPage;
