@@ -11,6 +11,7 @@ import {
   Download,
   Eye
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const DoctorDashboard = () => {
   const { user } = useAuth();
@@ -78,20 +79,14 @@ const DoctorDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome, Dr. {user?.name}!
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome, Dr. {user?.name}!</h1>
               <p className="text-gray-600">Medical Professional Dashboard</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-green-50 px-3 py-1 rounded-full">
-                <span className="text-green-600 text-sm font-medium">
-                  {user?.doctor?.specialization}
-                </span>
+                <span className="text-green-600 text-sm font-medium">{user?.doctor?.specialization}</span>
               </div>
-              <div className="text-sm text-gray-500">
-                Verified: {user?.doctor?.isVerified ? '✅' : '⏳'}
-              </div>
+              <div className="text-sm text-gray-500">Verified: {user?.doctor?.isVerified ? '✅' : '⏳'}</div>
             </div>
           </div>
         </div>
@@ -100,33 +95,32 @@ const DoctorDashboard = () => {
       {/* Stats */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <Users className="text-blue-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPatients || 0}</p>
+          {[{
+            icon: Users,
+            color: 'text-blue-600',
+            label: 'Total Patients',
+            value: stats.totalPatients || 0
+          },{
+            icon: FileText,
+            color: 'text-green-600',
+            label: 'Records Accessed',
+            value: stats.recordsAccessed || 0
+          },{
+            icon: UserCheck,
+            color: 'text-purple-600',
+            label: 'Pending Requests',
+            value: stats.pendingRequests || 0
+          }].map((card, i) => (
+            <motion.div key={card.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <card.icon className={`${card.color} mr-3`} size={24} />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{card.label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <FileText className="text-green-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Records Accessed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.recordsAccessed || 0}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <UserCheck className="text-purple-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingRequests || 0}</p>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Navigation */}
@@ -160,11 +154,11 @@ const DoctorDashboard = () => {
           {/* Content */}
           <div className="p-6">
             {activeTab === 'patients' && (
-              <div>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Patient List</h2>
                   <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" size={20} />
                     <input
                       type="text"
                       placeholder="Search patients..."
@@ -177,7 +171,7 @@ const DoctorDashboard = () => {
 
                 <div className="space-y-4">
                   {filteredPatients.map((patient) => (
-                    <div key={patient.did} className="bg-gray-50 rounded-lg p-4">
+                    <motion.div key={patient.did} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg shadow p-4">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-semibold text-gray-900">{patient.name}</h3>
@@ -191,7 +185,7 @@ const DoctorDashboard = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleRequestAccess(patient.did, 'Routine checkup')}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
@@ -205,7 +199,7 @@ const DoctorDashboard = () => {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
 
                   {filteredPatients.length === 0 && (
@@ -216,15 +210,15 @@ const DoctorDashboard = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {activeTab === 'requests' && (
-              <div>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Access Requests</h2>
                 <div className="space-y-4">
                   {accessRequests.map((request) => (
-                    <div key={request.id} className="bg-gray-50 rounded-lg p-4">
+                    <div key={request.id} className="bg-white rounded-lg shadow p-4">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-semibold text-gray-900">{request.patientName}</h3>
@@ -254,7 +248,7 @@ const DoctorDashboard = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>

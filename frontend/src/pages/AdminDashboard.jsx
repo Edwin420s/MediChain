@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -85,18 +86,12 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                System Administration
-              </h1>
-              <p className="text-gray-600">
-                Welcome, {user?.name} ({user?.admin?.level || 'System Admin'})
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">System Administration</h1>
+              <p className="text-gray-600">Welcome, {user?.name} ({user?.admin?.level || 'System Admin'})</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-purple-50 px-3 py-1 rounded-full">
-                <span className="text-purple-600 text-sm font-medium">
-                  {user?.admin?.department || 'All Departments'}
-                </span>
+                <span className="text-purple-600 text-sm font-medium">{user?.admin?.department || 'All Departments'}</span>
               </div>
             </div>
           </div>
@@ -106,42 +101,25 @@ const AdminDashboard = () => {
       {/* Stats */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <Users className="text-blue-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPatients || 0}</p>
+          {[{
+            icon: Users, color: 'text-blue-600', label: 'Total Patients', value: stats.totalPatients || 0
+          },{
+            icon: UserCheck, color: 'text-green-600', label: 'Verified Doctors', value: stats.verifiedDoctors || 0
+          },{
+            icon: UserX, color: 'text-yellow-600', label: 'Pending Approvals', value: stats.pendingApprovals || 0
+          },{
+            icon: Building, color: 'text-purple-600', label: 'Departments', value: stats.departments || 0
+          }].map((c, i) => (
+            <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <c.icon className={`${c.color} mr-3`} size={24} />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{c.label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <UserCheck className="text-green-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Verified Doctors</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.verifiedDoctors || 0}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <UserX className="text-yellow-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals || 0}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <Building className="text-purple-600 mr-3" size={24} />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Departments</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.departments || 0}</p>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Navigation */}
@@ -181,7 +159,7 @@ const AdminDashboard = () => {
           {/* Content */}
           <div className="p-6">
             {activeTab === 'overview' && (
-              <div>
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">System Overview</h2>
                 
                 {/* Pending Approvals */}
@@ -190,7 +168,7 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Doctor Approvals</h3>
                     <div className="space-y-4">
                       {pendingDoctors.map((doctor) => (
-                        <div key={doctor.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <motion.div key={doctor.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-semibold text-gray-900">{doctor.user.name}</h4>
@@ -212,7 +190,7 @@ const AdminDashboard = () => {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -223,33 +201,39 @@ const AdminDashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Departments</h3>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {departments.map((dept) => (
-                      <div key={dept.id} className="bg-gray-50 rounded-lg p-4">
+                      <motion.div key={dept.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg shadow p-4">
                         <h4 className="font-semibold text-gray-900">{dept.name}</h4>
                         <p className="text-sm text-gray-600">{dept.description}</p>
                         <div className="mt-2 text-sm text-gray-500">
                           Doctors: {dept.doctorCount || 0}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {activeTab === 'doctors' && (
-              <DoctorManagement 
-                doctors={doctors} 
-                onApprove={handleApproveDoctor}
-                onReject={handleRejectDoctor}
-              />
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
+                <DoctorManagement 
+                  doctors={doctors} 
+                  onApprove={handleApproveDoctor}
+                  onReject={handleRejectDoctor}
+                />
+              </motion.div>
             )}
 
             {activeTab === 'departments' && (
-              <DepartmentManagement departments={departments} />
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
+                <DepartmentManagement departments={departments} />
+              </motion.div>
             )}
 
             {activeTab === 'system' && (
-              <SystemSettings stats={stats} />
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
+                <SystemSettings stats={stats} />
+              </motion.div>
             )}
           </div>
         </div>

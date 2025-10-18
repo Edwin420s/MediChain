@@ -46,14 +46,8 @@ const LandingPage = () => {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="relative">
-              <div className="relative w-full h-96 bg-gradient-to-br from-blue-100 to-teal-100 rounded-2xl shadow-2xl flex items-center justify-center">
-                <Activity className="h-32 w-32 text-blue-600 opacity-50" />
-                <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg">
-                  <Shield className="h-8 w-8 text-teal-500" />
-                </div>
-                <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg">
-                  <Lock className="h-8 w-8 text-blue-600" />
-                </div>
+              <div className="relative w-full">
+                <img src="/hero-illustration.svg" alt="MediChain dashboard preview" className="w-full h-auto rounded-2xl shadow-2xl" />
               </div>
             </motion.div>
           </div>
