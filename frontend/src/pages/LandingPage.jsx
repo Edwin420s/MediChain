@@ -46,8 +46,127 @@ const LandingPage = () => {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="relative">
-              <div className="relative w-full">
-                <img src="/hero-illustration.svg" alt="MediChain dashboard preview" className="w-full h-auto rounded-2xl shadow-2xl" />
+              <div className="relative w-full space-y-4">
+                {/* Animated Dashboard Preview */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-gradient-to-br from-white to-blue-50 p-6 rounded-2xl shadow-2xl border border-blue-100"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-teal-600 rounded-xl flex items-center justify-center">
+                        <Activity className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">Health Dashboard</h3>
+                        <p className="text-sm text-gray-600">Real-time Records</p>
+                      </div>
+                    </div>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-3 h-3 bg-green-500 rounded-full"
+                    />
+                  </div>
+                  
+                  {/* Record Cards */}
+                  <div className="space-y-3">
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm">Blood Test</h4>
+                            <p className="text-xs text-gray-500">Oct 15, 2024</p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                          Verified
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 }}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm">X-Ray Scan</h4>
+                            <p className="text-xs text-gray-500">Oct 10, 2024</p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
+                          Verified
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 }}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      className="bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-300 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-teal-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm">Prescription</h4>
+                            <p className="text-xs text-gray-500">Oct 5, 2024</p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-medium rounded-full">
+                          Active
+                        </span>
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: '24', label: 'Records', icon: FileText },
+                    { value: '5', label: 'Providers', icon: Users },
+                    { value: '100%', label: 'Secure', icon: Lock }
+                  ].map((stat, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.9 + idx * 0.1 }}
+                      whileHover={{ y: -5 }}
+                      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 text-center"
+                    >
+                      <div className="inline-flex p-2 bg-blue-100 rounded-lg mb-2">
+                        <stat.icon className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                      <div className="text-xs text-gray-600">{stat.label}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>
