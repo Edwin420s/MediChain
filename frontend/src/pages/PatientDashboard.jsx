@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import Skeleton from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
+
 import { 
   FileText, 
   Share2, 
@@ -47,8 +50,10 @@ const PatientDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <Skeleton rows={6} />
+        </div>
       </div>
     );
   }
@@ -155,11 +160,13 @@ const PatientDashboard = () => {
               ))}
 
               {records.length === 0 && (
-                <div className="text-center py-12">
-                  <FileText className="mx-auto text-gray-400" size={48} />
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">No records yet</h3>
-                  <p className="text-gray-600">Upload your first medical record to get started</p>
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="No records yet"
+                  description="Upload your first medical record to get started"
+                  action="Upload Record"
+                  onAction={() => setActiveTab('records')}
+                />
               )}
             </div>
           </div>
