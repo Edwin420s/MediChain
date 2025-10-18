@@ -1,5 +1,6 @@
 import hederaService from '../services/hederaService.js';
 import hederaConfig from '../config/hedera.js';
+import { AccountId, AccountBalanceQuery } from '@hashgraph/sdk';
 import { logger } from '../utils/logger.js';
 
 const hederaController = {
@@ -57,12 +58,15 @@ const hederaController = {
       const { accountId } = req.params;
 
       const client = hederaConfig.getClient();
-      const balance = await client.getAccountBalance(accountId);
+      const id = AccountId.fromString(accountId);
+      const balance = await new AccountBalanceQuery()
+        .setAccountId(id)
+        .execute(client);
       
       res.json({
         success: true,
         accountId,
-        balance: balance.toString()
+        balance: balance.hbars.toString()
       });
 
     } catch (error) {
