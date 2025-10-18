@@ -71,7 +71,7 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// Create router configuration
+// Create router configuration with v7 future flags
 const router = createBrowserRouter([
   {
     path: '/',
@@ -221,7 +221,7 @@ const router = createBrowserRouter([
 
 // Router provider component
 const AppRouter = () => {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
 };
 
 export default AppRouter;

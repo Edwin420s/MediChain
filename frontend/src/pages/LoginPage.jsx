@@ -140,8 +140,8 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <div>
-              <Button type="submit" disabled={loading} className="w-full" size="lg">
+            <div className="flex justify-center">
+              <Button type="submit" disabled={loading} className="justify-center min-w-[200px]" size="lg">
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="loading-spinner mr-2"></div>

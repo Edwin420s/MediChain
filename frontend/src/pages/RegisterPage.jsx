@@ -96,7 +96,7 @@ const RegisterPage = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="form-label text-center">
+              <label htmlFor="name" className="form-label">
                 Full name
               </label>
               <div className="mt-1">
@@ -115,7 +115,7 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="form-label text-center">
+              <label htmlFor="email" className="form-label">
                 Email address
               </label>
               <div className="mt-1">
@@ -134,7 +134,7 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="form-label text-center">
+              <label htmlFor="password" className="form-label">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -161,13 +161,13 @@ const RegisterPage = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-sm text-gray-500 text-center">
+              <p className="mt-1 text-sm text-gray-500">
                 Password must be at least 8 characters long
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="form-label text-center">
+              <label htmlFor="confirmPassword" className="form-label">
                 Confirm password
               </label>
               <div className="mt-1 relative">
@@ -196,7 +196,7 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="flex items-center">
               <input
                 id="terms"
                 name="terms"
@@ -216,8 +216,8 @@ const RegisterPage = () => {
               </label>
             </div>
 
-            <div>
-              <Button type="submit" disabled={loading} className="w-full" size="lg">
+            <div className="flex justify-center">
+              <Button type="submit" disabled={loading} className="justify-center min-w-[200px]" size="lg">
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="loading-spinner mr-2"></div>
