@@ -1,6 +1,7 @@
 import { Client, AccountId, PrivateKey, TopicCreateTransaction, 
          TopicMessageSubmitTransaction, TokenCreateTransaction, 
          TokenAssociateTransaction, TransferTransaction, Hbar } from '@hashgraph/sdk';
+import axios from 'axios';
 
 class HederaService {
   constructor() {
@@ -8,6 +9,7 @@ class HederaService {
     this.operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ID);
     this.operatorKey = PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY);
     this.client.setOperator(this.operatorId, this.operatorKey);
+    this.mirrorUrl = process.env.MIRROR_NODE_URL || 'https://testnet.mirrornode.hedera.com';
   }
 
   // Create HCS topic for audit logs
