@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/Button';
 
@@ -11,10 +11,7 @@ const RegisterPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'PATIENT',
-    specialization: '',
-    licenseNumber: '',
-    department: ''
+    role: 'PATIENT'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,15 +53,8 @@ const RegisterPage = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role
+        role: 'PATIENT'
       };
-
-      // Add role-specific data
-      if (formData.role === 'DOCTOR') {
-        userData.specialization = formData.specialization;
-        userData.licenseNumber = formData.licenseNumber;
-        userData.department = formData.department;
-      }
 
       const result = await register(userData);
       
@@ -94,15 +84,6 @@ const RegisterPage = () => {
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Create your account
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link
-            to="/login"
-            className="font-medium text-blue-600 hover:text-blue-500"
-          >
-            sign in to your existing account
-          </Link>
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -115,13 +96,10 @@ const RegisterPage = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="form-label">
+              <label htmlFor="name" className="form-label text-center">
                 Full name
               </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
+              <div className="mt-1">
                 <input
                   id="name"
                   name="name"
@@ -130,20 +108,17 @@ const RegisterPage = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="form-input pl-10"
+                  className="form-input"
                   placeholder="Enter your full name"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="form-label">
+              <label htmlFor="email" className="form-label text-center">
                 Email address
               </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+              <div className="mt-1">
                 <input
                   id="email"
                   name="email"
@@ -152,97 +127,17 @@ const RegisterPage = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="form-input pl-10"
+                  className="form-input"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="role" className="form-label">
-                I am a
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="PATIENT">Patient</option>
-                <option value="DOCTOR">Medical Professional</option>
-              </select>
-            </div>
-
-            {formData.role === 'DOCTOR' && (
-              <>
-                <div>
-                  <label htmlFor="specialization" className="form-label">
-                    Specialization
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Stethoscope className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="specialization"
-                      name="specialization"
-                      type="text"
-                      required
-                      value={formData.specialization}
-                      onChange={handleChange}
-                      className="form-input pl-10"
-                      placeholder="e.g., Cardiology, Radiology"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="licenseNumber" className="form-label">
-                    License Number
-                  </label>
-                  <input
-                    id="licenseNumber"
-                    name="licenseNumber"
-                    type="text"
-                    required
-                    value={formData.licenseNumber}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="Enter your medical license number"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="department" className="form-label">
-                    Department
-                  </label>
-                  <select
-                    id="department"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    className="form-input"
-                  >
-                    <option value="">Select department</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="radiology">Radiology</option>
-                    <option value="pediatrics">Pediatrics</option>
-                    <option value="neurology">Neurology</option>
-                    <option value="orthopedics">Orthopedics</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            <div>
-              <label htmlFor="password" className="form-label">
+              <label htmlFor="password" className="form-label text-center">
                 Password
               </label>
               <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
                   id="password"
                   name="password"
@@ -251,12 +146,12 @@ const RegisterPage = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="form-input pl-10 pr-10"
+                  className="form-input pr-12"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -266,19 +161,16 @@ const RegisterPage = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 text-center">
                 Password must be at least 8 characters long
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="form-label">
+              <label htmlFor="confirmPassword" className="form-label text-center">
                 Confirm password
               </label>
               <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -287,12 +179,12 @@ const RegisterPage = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="form-input pl-10 pr-10"
+                  className="form-input pr-12"
                   placeholder="Confirm your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
@@ -304,7 +196,7 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <input
                 id="terms"
                 name="terms"
@@ -337,6 +229,13 @@ const RegisterPage = () => {
               </Button>
             </div>
           </form>
+          
+          <div className="mt-6 text-center">
+            <span className="text-gray-600">Already have an account? </span>
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              Sign in
+            </Link>
+          </div>
         </div>
       </div>
     </div>
