@@ -27,7 +27,6 @@ model User {
   patient      Patient?
   doctor       Doctor?
   admin        Admin?
-  accessRequests AccessRequest[]
   auditLogs    AuditLog[]
 
   @@map("users")
@@ -47,7 +46,6 @@ model Patient {
   records        MedicalRecord[]
   consents       Consent[]
   accessRequests AccessRequest[]
-  auditLogs      AuditLog[]
 
   @@map("patients")
 }
@@ -68,7 +66,6 @@ model Doctor {
   department     Department? @relation(fields: [departmentId], references: [id])
   consents       Consent[]
   accessRequests AccessRequest[]
-  auditLogs      AuditLog[]
 
   @@map("doctors")
 }

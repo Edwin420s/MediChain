@@ -1,9 +1,10 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
-// Layouts
-import App from './App';
+// Layout components
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -74,7 +75,15 @@ const PublicRoute = ({ children }) => {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main>
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {

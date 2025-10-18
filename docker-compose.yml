@@ -31,6 +31,10 @@ services:
       - medichain-network
     restart: unless-stopped
     healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   # Backend API
   backend:
     build:
@@ -38,12 +42,12 @@ services:
       dockerfile: Dockerfile.prod
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-medichain}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-medichain}?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       HEDERA_OPERATOR_ID: ${HEDERA_OPERATOR_ID}
       HEDERA_OPERATOR_KEY: ${HEDERA_OPERATOR_KEY}
-      HEDERA_NETWORK: ${HEDERA_NETWORK:-mainnet}
+      HEDERA_NETWORK: ${HEDERA_NETWORK:-testnet}
       WEB3_STORAGE_TOKEN: ${WEB3_STORAGE_TOKEN}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -54,10 +58,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-{{ ... }}
-          memory: 512M
-        reservations:
-          memory: 256M
+    networks:
+      - medichain-network
 
   # Frontend Application
   frontend:
@@ -65,17 +67,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
     environment:
-      VITE_API_URL: ${API_URL:-https://api.medichain.com/api}
-      VITE_HEDERA_NETWORK: ${HEDERA_NETWORK:-mainnet}
+      VITE_API_URL: ${API_URL:-http://localhost:3001/api}
+      VITE_HEDERA_NETWORK: ${HEDERA_NETWORK:-testnet}
     ports:
       - "3000:80"
     depends_on:
       - backend
     networks:
-{{ ... }}
-          memory: 256M
-        reservations:
-          memory: 128M
+      - medichain-network
 
   # Nginx Reverse Proxy
   nginx:

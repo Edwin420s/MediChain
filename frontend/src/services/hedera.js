@@ -1,183 +1,67 @@
-import { 
-  Client, 
-  AccountId, 
-  PrivateKey, 
-  TopicCreateTransaction,
-  TopicMessageSubmitTransaction,
-  TopicMessageQuery,
-  Hbar 
-} from '@hashgraph/sdk';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class HederaService {
   constructor() {
-    this.client = null;
     this.accountId = null;
     this.privateKey = null;
-    this.isConnected = false;
   }
 
   async connectWallet(accountId, privateKey) {
-    try {
-      this.accountId = AccountId.fromString(accountId);
-      this.privateKey = PrivateKey.fromString(privateKey);
-
-      // Use testnet for development, mainnet for production
-      this.client = Client.forTestnet();
-      this.client.setOperator(this.accountId, this.privateKey);
-      
-      // Set default max transaction fee
-      this.client.setDefaultMaxTransactionFee(new Hbar(2));
-      this.client.setDefaultMaxQueryPayment(new Hbar(1));
-
-      this.isConnected = true;
-      
-      console.log('Hedera wallet connected:', this.accountId.toString());
-      return { success: true, accountId: this.accountId.toString() };
-    } catch (error) {
-      console.error('Error connecting to Hedera:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  async createAuditTopic() {
-    try {
-      const transaction = new TopicCreateTransaction()
-        .setTopicMemo('MediChain Audit Logs')
-        .setMaxTransactionFee(new Hbar(2));
-
-      const txResponse = await transaction.execute(this.client);
-      const receipt = await txResponse.getReceipt(this.client);
-      
-      return {
-        success: true,
-        topicId: receipt.topicId.toString()
-      };
-    } catch (error) {
-      console.error('Error creating audit topic:', error);
-      return { success: false, error: error.message };
-    }
+    // No-op in browser: we do not use @hashgraph/sdk on the client to avoid polyfills
+    this.accountId = accountId;
+    this.privateKey = privateKey;
+    return { success: true, accountId };
   }
 
   async submitAuditMessage(topicId, message) {
     try {
-      const messageString = typeof message === 'string' ? message : JSON.stringify(message);
-      
-      const transaction = await new TopicMessageSubmitTransaction()
-        .setTopicId(topicId)
-        .setMessage(messageString)
-        .setMaxTransactionFee(new Hbar(2))
-        .execute(this.client);
-
-      const receipt = await transaction.getReceipt(this.client);
-      
-      return {
-        success: true,
-        sequenceNumber: receipt.topicSequenceNumber?.toString() || receipt.topicSequenceNumber,
-        consensusTimestamp: receipt.consensusTimestamp.toString(),
-        transactionId: transaction.transactionId.toString()
-      };
+      const { data } = await axios.post(`${API_BASE}/hedera/audit`, {
+        topicId,
+        message
+      });
+      return data;
     } catch (error) {
-      console.error('Error submitting audit message:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.error || error.message };
     }
   }
 
-  async listenToTopic(topicId, onMessage, onError) {
+  async getTopicMessages(topicId, { limit = 10, sequenceNumber } = {}) {
     try {
-      new TopicMessageQuery()
-        .setTopicId(topicId)
-        .subscribe(
-          this.client,
-          (error) => {
-            if (onError) onError(error);
-            else console.error('Topic subscription error:', error);
-          },
-          (message) => {
-            try {
-              const messageContent = Buffer.from(message.contents, 'utf8').toString();
-              const parsedMessage = JSON.parse(messageContent);
-              
-              onMessage({
-                ...parsedMessage,
-                consensusTimestamp: message.consensusTimestamp.toString(),
-                sequenceNumber: message.sequenceNumber.toString()
-              });
-            } catch (parseError) {
-              console.error('Error parsing topic message:', parseError);
-            }
-          }
-        );
-      
-      return { success: true };
+      const params = new URLSearchParams();
+      if (limit) params.set('limit', String(limit));
+      if (sequenceNumber) params.set('sequenceNumber', String(sequenceNumber));
+      const { data } = await axios.get(`${API_BASE}/hedera/topics/${topicId}/messages?${params.toString()}`);
+      return data;
     } catch (error) {
-      console.error('Error subscribing to topic:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.error || error.message };
     }
   }
 
-  async getAccountBalance() {
+  async getAccountBalance(accountId) {
     try {
-      const balance = await this.client.getAccountBalance(this.accountId);
-      return {
-        success: true,
-        balance: balance.toString()
-      };
+      const id = accountId || this.accountId;
+      const { data } = await axios.get(`${API_BASE}/hedera/account/${id}/balance`);
+      return data;
     } catch (error) {
-      console.error('Error getting account balance:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.error || error.message };
     }
   }
 
   async verifyTransaction(transactionId) {
     try {
-      const transaction = await this.client.getTransaction(transactionId);
-      const receipt = await transaction.getReceipt(this.client);
-      
-      return {
-        success: true,
-        status: receipt.status.toString(),
-        consensusTimestamp: receipt.consensusTimestamp?.toString()
-      };
+      const { data } = await axios.get(`${API_BASE}/hedera/transactions/${encodeURIComponent(transactionId)}`);
+      return data;
     } catch (error) {
-      console.error('Error verifying transaction:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.error || error.message };
     }
   }
 
   disconnect() {
-    this.client = null;
     this.accountId = null;
     this.privateKey = null;
-    this.isConnected = false;
-  }
-
-  // Utility method to generate a new Hedera account (for testing)
-  async generateTestAccount() {
-    try {
-      const privateKey = PrivateKey.generate();
-      const publicKey = privateKey.publicKey;
-
-      const transaction = new AccountCreateTransaction()
-        .setKey(publicKey)
-        .setInitialBalance(new Hbar(10));
-
-      const txResponse = await transaction.execute(this.client);
-      const receipt = await txResponse.getReceipt(this.client);
-      const newAccountId = receipt.accountId;
-
-      return {
-        success: true,
-        accountId: newAccountId.toString(),
-        privateKey: privateKey.toString(),
-        publicKey: publicKey.toString()
-      };
-    } catch (error) {
-      console.error('Error generating test account:', error);
-      return { success: false, error: error.message };
-    }
   }
 }
 
-// Create a singleton instance
-const hederaService = new HederaService();
-export default hederaService;
+export default new HederaService();
