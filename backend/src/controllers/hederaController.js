@@ -83,14 +83,19 @@ const hederaController = {
       const { topicId } = req.params;
       const { limit = 10, sequenceNumber } = req.query;
 
-      // This would require a Mirror Node connection
-      // For now, return mock data or implement with a Mirror Node service
-      
+      const result = await hederaService.getTopicMessages(topicId, {
+        limit: Number(limit),
+        sequenceNumber: sequenceNumber ? Number(sequenceNumber) : undefined
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error });
+      }
+
       res.json({
         success: true,
         topicId,
-        messages: [],
-        message: 'Topic message retrieval requires Mirror Node integration'
+        messages: result.messages
       });
 
     } catch (error) {

@@ -97,6 +97,25 @@ class HederaService {
       return { success: false, error: error.message };
     }
   }
+
+  // Get HCS topic messages via Mirror Node
+  async getTopicMessages(topicId, { limit = 10, sequenceNumber } = {}) {
+    try {
+      const params = new URLSearchParams();
+      if (limit) params.set('limit', String(limit));
+      if (sequenceNumber) params.set('sequencenumber', String(sequenceNumber));
+
+      const url = `${this.mirrorUrl}/api/v1/topics/${encodeURIComponent(topicId)}/messages?${params.toString()}`;
+      const { data } = await axios.get(url, { timeout: 10000 });
+
+      return {
+        success: true,
+        messages: data?.messages || []
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new HederaService();
