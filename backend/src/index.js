@@ -39,8 +39,10 @@ class MediChainServer {
     this.app = express();
     this.port = process.env.PORT || 3001;
     this.env = process.env.NODE_ENV || 'development';
+  }
 
-    this.initializeServices();
+  async initialize() {
+    await this.initializeServices();
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -334,6 +336,7 @@ class MediChainServer {
 }
 
 const server = new MediChainServer();
+await server.initialize();
 server.start();
 
 export default server;
