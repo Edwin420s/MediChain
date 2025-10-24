@@ -28,6 +28,8 @@ import { logger } from './utils/logger.js';
 // Import services
 import hederaConfig from './config/hedera.js';
 import prisma from './config/db.js';
+import cacheService from './services/cacheService.js';
+import { sanitizeInput, detectAttacks } from './middleware/sanitizer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,6 +53,13 @@ class MediChainServer {
 
       await prisma.$connect();
       logger.info('Database connected successfully');
+
+      // Initialize cache service (non-blocking)
+      cacheService.initialize().then(() => {
+        logger.info('Cache service initialized');
+      }).catch(err => {
+        logger.warn('Cache service initialization failed (continuing without cache):', err);
+      });
 
       await this.healthCheck();
     } catch (error) {
@@ -92,6 +101,10 @@ class MediChainServer {
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     this.app.use(compression());
 
+    // Security: Input sanitization and attack detection
+    this.app.use(sanitizeInput);
+    this.app.use(detectAttacks);
+
     this.app.use((req, res, next) => {
       const start = Date.now();
       res.on('finish', () => {
@@ -116,7 +129,9 @@ class MediChainServer {
         const hederaHealth = await hederaConfig.healthCheck();
         healthcheck.services.hedera = hederaHealth.healthy ? 'healthy' : 'unhealthy';
 
-        healthcheck.services.redis = await this.checkRedisHealth();
+        const cacheHealth = await cacheService.healthCheck();
+        healthcheck.services.cache = cacheHealth.healthy ? 'healthy' : 'unhealthy';
+
         res.status(200).json(healthcheck);
       } catch (error) {
         healthcheck.services.database = 'unhealthy';
@@ -245,10 +260,10 @@ class MediChainServer {
     }
 
     try {
-      const redisStatus = await this.checkRedisHealth();
-      checks.push({ service: 'redis', status: redisStatus });
+      const cacheHealth = await cacheService.healthCheck();
+      checks.push({ service: 'cache', status: cacheHealth.healthy ? 'healthy' : 'unhealthy' });
     } catch (error) {
-      checks.push({ service: 'redis', status: 'unhealthy', error: error.message });
+      checks.push({ service: 'cache', status: 'unhealthy', error: error.message });
     }
 
     return checks;
@@ -292,8 +307,11 @@ class MediChainServer {
         try {
           await prisma.$disconnect();
           logger.info('Database connections closed.');
+          
+          await cacheService.close();
+          logger.info('Cache service closed.');
         } catch (error) {
-          logger.error('Error closing database connections:', error);
+          logger.error('Error closing connections:', error);
         }
         logger.info('Graceful shutdown completed.');
         process.exit(0);
