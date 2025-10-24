@@ -5,11 +5,26 @@ import axios from 'axios';
 
 class HederaService {
   constructor() {
-    this.client = Client.forTestnet(); // Use forMainnet() in production
-    this.operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ID);
-    this.operatorKey = PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY);
-    this.client.setOperator(this.operatorId, this.operatorKey);
+    this.client = null;
+    this.operatorId = null;
+    this.operatorKey = null;
     this.mirrorUrl = process.env.MIRROR_NODE_URL || 'https://testnet.mirrornode.hedera.com';
+    this.initialized = false;
+    
+    // Only initialize if credentials are available
+    if (process.env.HEDERA_OPERATOR_ID && process.env.HEDERA_OPERATOR_KEY) {
+      try {
+        this.client = Client.forTestnet(); // Use forMainnet() in production
+        this.operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ID);
+        this.operatorKey = PrivateKey.fromString(process.env.HEDERA_OPERATOR_KEY);
+        this.client.setOperator(this.operatorId, this.operatorKey);
+        this.initialized = true;
+      } catch (error) {
+        console.warn('Hedera service initialization failed:', error.message);
+      }
+    } else {
+      console.warn('Hedera credentials not found - blockchain features disabled');
+    }
   }
 
   // Create HCS topic for audit logs

@@ -68,9 +68,10 @@ router.post('/consent',
   patientController.grantConsent
 );
 
-router.put('/consent/:consentId',
-  patientController.updateConsent
-);
+// TODO: Implement updateConsent functionality
+// router.put('/consent/:consentId',
+//   patientController.updateConsent
+// );
 
 router.delete('/consent/:consentId',
   patientController.revokeConsent
@@ -100,12 +101,13 @@ router.get('/emergency-info',
 );
 
 // Profile management
-router.get('/profile',
-  patientController.getPatientProfile
-);
+// TODO: Implement patient profile functionality
+// router.get('/profile',
+//   patientController.getPatientProfile
+// );
 
-router.put('/profile',
-  patientController.updatePatientProfile
-);
+// router.put('/profile',
+//   patientController.updatePatientProfile
+// );
 
 export default router;
