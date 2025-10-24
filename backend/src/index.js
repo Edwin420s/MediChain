@@ -49,22 +49,29 @@ class MediChainServer {
   async initializeServices() {
     try {
       hederaConfig.initialize();
-      logger.info('Hedera service initialized');
+      if (hederaConfig.isInitialized) {
+        logger.info('Hedera service initialized');
+      }
 
-      await prisma.$connect();
-      logger.info('Database connected successfully');
+      try {
+        await prisma.$connect();
+        logger.info('Database connected successfully');
+      } catch (dbError) {
+        logger.error('Database connection failed:', dbError.message);
+        logger.warn('Server will start without database connection');
+      }
 
       // Initialize cache service (non-blocking)
       cacheService.initialize().then(() => {
         logger.info('Cache service initialized');
       }).catch(err => {
-        logger.warn('Cache service initialization failed (continuing without cache):', err);
+        logger.warn('Cache service initialization failed (continuing without cache):', err.message);
       });
 
       await this.healthCheck();
     } catch (error) {
       logger.error('Service initialization failed:', error);
-      process.exit(1);
+      logger.warn('Starting server with limited functionality');
     }
   }
 

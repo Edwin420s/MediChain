@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../components/Toast';
 import Button from '../components/Button';
 
 const RegisterPage = () => {
@@ -20,7 +20,7 @@ const RegisterPage = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
-  const { push } = useToast();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -59,15 +59,15 @@ const RegisterPage = () => {
       const result = await register(userData);
       
       if (result.success) {
-        push({ type: 'success', title: 'Account created', message: 'Your account has been created successfully.' });
+        toast.success('Your account has been created successfully.');
         navigate('/');
       } else {
         setError(result.error);
-        push({ type: 'error', title: 'Registration failed', message: result.error || 'Please check your details' });
+        toast.error(result.error || 'Registration failed. Please check your details.');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
-      push({ type: 'error', title: 'Unexpected error', message: 'Please try again.' });
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

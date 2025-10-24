@@ -13,7 +13,9 @@ class HederaConfig {
   initialize() {
     try {
       if (!process.env.HEDERA_OPERATOR_ID || !process.env.HEDERA_OPERATOR_KEY) {
-        throw new Error('Hedera operator credentials not found in environment variables');
+        logger.warn('Hedera operator credentials not found - running without blockchain features');
+        this.isInitialized = false;
+        return;
       }
 
       this.operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ID);
@@ -44,7 +46,8 @@ class HederaConfig {
       
     } catch (error) {
       logger.error('Failed to initialize Hedera client:', error);
-      throw error;
+      logger.warn('Continuing without blockchain features');
+      this.isInitialized = false;
     }
   }
 

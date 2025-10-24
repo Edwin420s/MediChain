@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../components/Toast';
 import Button from '../components/Button';
 
 const LoginPage = () => {
@@ -16,7 +16,7 @@ const LoginPage = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { push } = useToast();
+  const toast = useToast();
 
   const handleChange = (e) => {
     setFormData({
@@ -35,15 +35,15 @@ const LoginPage = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        push({ type: 'success', title: 'Welcome back', message: 'You have signed in successfully.' });
+        toast.success('You have signed in successfully.');
         navigate('/');
       } else {
         setError(result.error);
-        push({ type: 'error', title: 'Sign in failed', message: result.error || 'Invalid credentials' });
+        toast.error(result.error || 'Sign in failed. Invalid credentials.');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
-      push({ type: 'error', title: 'Unexpected error', message: 'Please try again.' });
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

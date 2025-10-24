@@ -22,15 +22,16 @@ router.post('/refresh-token',
   authController.refreshToken
 );
 
-router.post('/forgot-password',
-  authLimiter,
-  authController.forgotPassword
-);
+// TODO: Implement forgot-password and reset-password functionality
+// router.post('/forgot-password',
+//   authLimiter,
+//   authController.forgotPassword
+// );
 
-router.post('/reset-password',
-  authLimiter,
-  authController.resetPassword
-);
+// router.post('/reset-password',
+//   authLimiter,
+//   authController.resetPassword
+// );
 
 // Protected routes
 router.get('/profile',
@@ -54,16 +55,17 @@ router.post('/logout',
 );
 
 // Admin only routes
-router.get('/users',
-  authController.authenticate,
-  authController.requireRole(['ADMIN', 'SUPER_ADMIN']),
-  authController.getUsers
-);
+// TODO: Implement getUsers and updateUserStatus functionality
+// router.get('/users',
+//   authController.authenticate,
+//   authController.requireRole(['ADMIN', 'SUPER_ADMIN']),
+//   authController.getUsers
+// );
 
-router.put('/users/:userId/status',
-  authController.authenticate,
-  authController.requireRole(['ADMIN', 'SUPER_ADMIN']),
-  authController.updateUserStatus
-);
+// router.put('/users/:userId/status',
+//   authController.authenticate,
+//   authController.requireRole(['ADMIN', 'SUPER_ADMIN']),
+//   authController.updateUserStatus
+// );
 
 export default router;
