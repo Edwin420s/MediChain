@@ -15,6 +15,9 @@ A **production-ready** healthcare platform for secure, patient-owned medical rec
 - [🔧 Improvements](docs/IMPROVEMENTS.md)
 - [🐛 Report Issues](https://github.com/Edwin420s/MediChain/issues)
 
+## pitch deck  
+https://drive.google.com/file/d/1jzSMeY3kUdlQE6BZE4rCK9xrd1rYxEWi/view?usp=sharing 
+
 ## 🌍 Non‑Technical Summary
 
 MediChain is a digital health record system that puts patients in control of their medical information. Instead of paper files that get lost or repeating the same tests at every clinic, your records are stored safely, can be shared only with your permission, and follow you wherever you go. Doctors get the right information at the right time, patients save money and time, and hospitals reduce fraud and errors. Everything is designed for real-world use across clinics and regions, with privacy and transparency built in.
