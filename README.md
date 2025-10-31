@@ -5,7 +5,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-70%25-green.svg)](https://codecov.io/gh/Edwin420s/MediChain)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A **production-ready** healthcare platform for secure, patient-owned medical records, built on Hedera Hashgraph and IPFS, with a modern React + Node/Express stack. Features end-to-end encrypted storage, consent-based access control, immutable audit trails, comprehensive testing, and enterprise-grade security.
+A **production-ready** healthcare platform for secure, patient-owned medical records, built on Hedera Hashgraph and IPFS, with a modern React + Node/Express stack. Features end-to-end encrypted storage, consent-based access control, immutable audit trails, comprehensive testing, and enterprise-grade security. 
 
 ## 🚀 Quick Links
 
